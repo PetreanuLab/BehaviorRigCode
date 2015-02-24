@@ -1,0 +1,78 @@
+function [x, y, side_list, odor_list]=SidesSection(obj,action,x,y);
+%
+% [x, y, side_list, odor_list] = ...
+%    SidesSection(obj, action, x, y);
+%
+% args:    x, y                  current UI pos, in pixels
+%          n_done_trials         handle to number of completed trials
+%          HitHistory           handle to history of hits versus errors
+%                                (vector: 1=hit, 0=error,2=hit not enought
+%                                poke len=n_done_trials)fsl
+%          maxtrials             max number of trials in experiment
+%          obj                   A classical_soloobj object
+%
+% returns: x, y                  updated UI pos
+%          side_list             handle to vector of correct sides,
+%                                   one per trial.
+%          odor_list             handle to vector of odor stimuli,
+%                                   one per trial.
+%
+%          update_sidesplot_fn  function that updates sides and rewards plot
+%          set_next_side_fn     fn, uses error hist to override correct side
+%
+
+GetSoloFunctionArgs;
+
+switch action,
+
+    case 'init', % ----------  INIT  -------------------------
+
+
+
+        gcf;
+
+
+        PushbuttonParam(obj, 'SetOdorVector', x, y,'label','Set stimulus vector',...
+            'position', [x y 200 50], 'BackgroundColor', [0.1 0.5 0.5]); next_row(y,5);
+        set_callback(SetOdorVector, {'SidesSection', 'set_future_sides'});
+
+
+
+        % Params that control the reward mode:
+        %
+        %         SubheaderParam(obj, 'sides_sbh', 'Trial Side & Schedule', x, y); ...
+        %           next_row(y);
+
+        SidesSection(obj, 'set_future_sides');
+
+
+    case 'set_future_sides', % ----------  SET_FUTURE_SIDES  ----------------
+
+        ol = value(odor_list);
+        
+        SoloFunctionAddVars('OdorSection', 'ro_args', 'odor_list');
+
+        starting_at = n_started_trials+1;
+
+        % generate order of odors
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+        tmp = []; % initialize (inserts stim numbers in tmp, according to each probability) <-
+        
+        maxtrials= length(ol);
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%----------------------------------------------------------------%%%
+
+
+        % generate L-R reward availability (R is 0, L is 1, neither is 2, both is 3)
+
+
+      
+        odor_list.value = ol;
+
+    otherwise,
+        error(['Don''t know how to handle action ' action]);
+end;
+

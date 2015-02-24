@@ -1,0 +1,336 @@
+function [x, y] = PlotSection(obj, action, x, y)
+
+GetSoloFunctionArgs;
+
+switch action,
+    case 'init',
+        
+        Mix1 = '56/44';
+        Mix2 = '68/32';
+        Mix3 = '80/20';
+        Mix4 = '100/0';
+        
+%         gcf;
+        SoloParamHandle(obj, 'myfig', 'value', figure, 'saveable', 0);
+        name = 'Plot Section'; 
+        set(value(myfig), 'Name', name, 'Tag', name, ...
+              'closerequestfcn', 'dispatcher(''close_protocol'')', 'MenuBar', 'none');
+        set(value(myfig), 'Position', [50   0   1500   980], 'Visible', 'on');
+        x = 1; y = 1;
+        
+        % -------------------- sidePlot ----------------------------------
+        SoloParamHandle(obj,'sidePlot', 'saveable', 0, 'value', axes('Position', [0.04 0.04 0.44 0.12]));
+
+        
+        SoloParamHandle(obj, 'xAxisLim')
+        xAxisLim.value = 40;
+        SoloParamHandle(obj, 'i');
+        i.value = 0;
+        
+        set(value(sidePlot),'xlim',[0 value(xAxisLim)],'ylim', [0.5 2.5]); hold on
+        xlabel('# Trials')
+        set(gca,'YTickLabel',{'--','left','--','right','--'})
+        
+%         next_row(y,1.3);
+
+        
+        % -------------------- biasPlot -----------------------------
+        SoloParamHandle(obj,'biasPlot', 'saveable', 0, 'value', axes('Position', [0.52 0.04 0.44 0.12]));
+        set(value(biasPlot),'xlim',[0 value(xAxisLim)],'ylim', [0 1]); hold on
+        xlabel('# Trials')
+        ylabel('Bias / Prob. left odor');
+
+        
+        
+        
+        % -------------------- OSTPlot -----------------------------
+        SoloParamHandle(obj,'OSTOdor1Plot', 'saveable', 0, 'value', axes('Position', [0.04 0.22 0.20 0.16]));
+        set(value(OSTOdor1Plot),'xlim',[-5 0],'ylim', [-0.05 0.6]); hold on
+        ylabel('OST (s)')
+        xlabel('Concentration')
+        
+        SoloParamHandle(obj,'OSTOdor2Plot', 'saveable', 0, 'value', axes('Position', [0.28 0.22 0.20 0.16]));
+        set(value(OSTOdor2Plot),'xlim',[-5 0],'ylim', [-0.05 0.6]); hold on
+        ylabel('OST (s)')
+        xlabel('Concentration')
+
+        SoloParamHandle(obj,'OSTMix1Plot', 'saveable', 0, 'value', axes('Position', [0.52 0.22 0.20 0.16]));
+        set(value(OSTMix1Plot),'xlim',[-5 0],'ylim', [-0.05 0.6]); hold on
+        ylabel('OST (s)')
+        xlabel('Concentration')
+        set(gca,'XTickLabel',{'--', Mix','--','right','--'})
+        
+        SoloParamHandle(obj,'OSTMix2Plot', 'saveable', 0, 'value', axes('Position', [0.76 0.22 0.20 0.16]));
+        set(value(OSTMix2Plot),'xlim',[-5 0],'ylim', [-0.05 0.6]); hold on
+        ylabel('OST (s)')
+        xlabel('Concentration')
+        
+                
+       % -------------------- performancePlot -----------------------------
+        SoloParamHandle(obj,'perfOdor1Plot', 'saveable', 0, 'value', axes('Position', [0.04 0.41 0.20 0.16]));
+        set(value(perfOdor1Plot),'xlim',[-5 0],'ylim', [-0.05 1.05]); hold on
+        ylabel('Performance (%)')
+%         xlabel('Concentration')
+        
+        SoloParamHandle(obj,'perfOdor2Plot', 'saveable', 0, 'value', axes('Position', [0.28 0.41 0.20 0.16]));
+        set(value(perfOdor2Plot),'xlim',[-5 0],'ylim', [-0.05 1.05]); hold on
+        ylabel('Performance (%)')
+%         xlabel('Concentration')
+
+        SoloParamHandle(obj,'perfMix1Plot', 'saveable', 0, 'value', axes('Position', [0.52 0.41 0.20 0.16]));
+        set(value(perfMix1Plot),'xlim',[-5 0],'ylim', [-0.05 1.05]); hold on
+        ylabel('Performance (%)')
+%         xlabel('Concentration')
+        
+        SoloParamHandle(obj,'perfMix2Plot', 'saveable', 0, 'value', axes('Position', [0.76 0.41 0.20 0.16]));
+        set(value(perfMix2Plot),'xlim',[-5 0],'ylim', [-0.05 1.05]); hold on
+        ylabel('Performance (%)')
+%         xlabel('Concentration')
+        
+
+        
+        % -------------------- MTPlot -----------------------------
+        SoloParamHandle(obj,'MTOdor1Plot', 'saveable', 0, 'value', axes('Position', [0.04 0.6 0.20 0.16]));
+        set(value(MTOdor1Plot),'xlim',[-5 0],'ylim', [-0.05 0.6]); hold on
+        ylabel('MT (s)')
+%         xlabel('Concentration')
+        title('Odor 1')
+        
+        SoloParamHandle(obj,'MTOdor2Plot', 'saveable', 0, 'value', axes('Position', [0.28 0.6 0.20 0.16]));
+        set(value(MTOdor2Plot),'xlim',[-5 0],'ylim', [-0.05 0.6]); hold on
+        ylabel('MT (s)')
+%         xlabel('Concentration')
+        title('Odor 2')
+
+        SoloParamHandle(obj,'MTMix1Plot', 'saveable', 0, 'value', axes('Position', [0.52 0.6 0.20 0.16]));
+        set(value(MTMix1Plot),'xlim',[-5 0],'ylim', [-0.05 0.6]); hold on
+        ylabel('MT (s)')
+%         xlabel('Concentration')
+        title('Mix 1')
+        
+        SoloParamHandle(obj,'MTMix2Plot', 'saveable', 0, 'value', axes('Position', [0.76 0.6 0.20 0.16]));
+        set(value(MTMix2Plot),'xlim',[-5 0],'ylim', [-0.05 0.6]); hold on
+        ylabel('MT (s)')
+%         xlabel('Concentration')
+        title('Mix 2')
+        
+        
+        
+        % -------------------- concProportionPlot -----------------------------
+        SoloParamHandle(obj,'concPropPlot', 'saveable', 0, 'value', axes('Position', [0.04 0.84 0.44 0.15]));
+        set(value(concPropPlot),'xlim', [-5 0],'ylim', [0 100]); hold on
+        ylabel('Number of trials')
+        xlabel('Concentration')
+        title('Concentration task')
+        
+        
+        
+        % -------------------- mixProportionPlot -----------------------------
+        SoloParamHandle(obj,'mixPropPlot', 'saveable', 0, 'value', axes('Position', [0.52 0.84 0.44 0.15]));
+        set(value(mixPropPlot),'xlim',[-5 0],'ylim', [0 100]); hold on
+        ylabel('Number of trials')
+        xlabel('Concentration')
+        title('Mixture task')
+   
+        
+       
+    %%% sidePlot %%%
+        SoloParamHandle(obj,'sideListPlot','value',plot(value(sidePlot),-1,0, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','o','Color','k',...
+                        'MarkerFaceColor','k')); hold on
+        SoloParamHandle(obj,'concListPlot','value',plot(value(sidePlot),-1,0, ...
+                        'LineStyle','none','MarkerSize',10,'Marker','+','Color','k',...
+                        'MarkerFaceColor','k')); hold on
+        SoloParamHandle(obj,'mixListPlot','value',plot(value(sidePlot),-1,0, ...
+                        'LineStyle','none','MarkerSize',10,'Marker','x','Color','k',...
+                        'MarkerFaceColor','k')); hold on
+        SoloParamHandle(obj,'incorrectPlot','value',plot(value(sidePlot),-1,0, ...
+                        'LineStyle','none','MarkerSize',10,'Marker','o','Color','r',...
+                        'MarkerFaceColor','None')); hold on
+        SoloParamHandle(obj,'correctPlot','value',plot(value(sidePlot),-1,1, ...
+                        'LineStyle','none','MarkerSize',10,'Marker','o','Color','g',...
+                        'MarkerFaceColor','none')); hold on
+        SoloParamHandle(obj,'choicePlot','value',plot(value(sidePlot),-1,1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','o','Color','b',...
+                        'MarkerFaceColor','b')); hold on
+        SoloParamHandle(obj,'too_latePlot','value',plot(value(sidePlot),-1,1, ...
+                        'LineStyle','none','MarkerSize',10,'Marker','o','Color','k',...
+                        'MarkerFaceColor','none')); hold on
+        SoloParamHandle(obj,'premature_coutPlot','value',plot(value(sidePlot),-1,1, ...
+                        'LineStyle','none','MarkerSize',10,'Marker','o','Color','y',...
+                        'MarkerFaceColor','none'));hold on
+                    
+                    
+             
+        %%% OSTOdor1Plot %%%
+        SoloParamHandle(obj,'odorSampTimeOdor1Plot','value',plot(value(OSTOdor1Plot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','c',...
+                        'MarkerFaceColor','c')); hold on
+                    
+        %%% OSTOdor2Plot %%%
+        SoloParamHandle(obj,'odorSampTimeOdor2Plot','value',plot(value(OSTOdor2Plot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','m',...
+                        'MarkerFaceColor','m')); hold on
+                    
+        %%% OSTMix1Plot %%%
+        SoloParamHandle(obj,'odorSampTimeMix1Plot','value',plot(value(OSTMix1Plot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','c',...
+                        'MarkerFaceColor','c')); hold on
+                    
+        %%% OSTMix2Plot %%%
+        SoloParamHandle(obj,'odorSampTimeMix2Plot','value',plot(value(OSTMix2Plot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','m',...
+                        'MarkerFaceColor','m')); hold on
+                    
+                    
+                    
+        %%% perfOdor1Plot %%%
+        SoloParamHandle(obj,'performanceOdor1Plot','value',plot(value(perfOdor1Plot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','o','Color','c',...
+                        'MarkerFaceColor','c')); hold on
+                    
+        %%% perfOdor2Plot %%%
+        SoloParamHandle(obj,'performanceOdor2Plot','value',plot(value(perfOdor2Plot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','o','Color','m',...
+                        'MarkerFaceColor','m')); hold on
+                    
+        %%% perfMix1Plot %%%
+        SoloParamHandle(obj,'performanceMix1Plot','value',plot(value(perfMix1Plot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','o','Color','c',...
+                        'MarkerFaceColor','c')); hold on
+                    
+        %%% perfMix2Plot %%%
+        SoloParamHandle(obj,'performanceMix2Plot','value',plot(value(perfMix2Plot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','o','Color','m',...
+                        'MarkerFaceColor','m')); hold on
+                    
+                    
+        %%% biasPlot %%%
+        SoloParamHandle(obj,'weightedBiasSessionPlot','value',plot(value(biasPlot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','o','Color','m',...
+                        'MarkerFaceColor','m')); hold on
+                    
+        SoloParamHandle(obj,'probOdor1SessionPlot','value',plot(value(biasPlot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','o','Color','c',...
+                        'MarkerFaceColor','c')); hold on
+                    
+                    
+        %%% concPropPlot %%%
+        SoloParamHandle(obj,'concProportionPlot','value',bar(value(concPropPlot),0, 'group', 'c'))%,-1,-1, ...
+                        %'LineStyle','none','MarkerSize',5,'Marker','o','Color','m',...
+                        %'MarkerFaceColor','m')); hold on
+                    
+                        
+        %%% mixPropPlot %%%
+        SoloParamHandle(obj,'mixProportionPlot','value',bar(value(mixPropPlot),0, 'group', 'm')); hold on
+        
+                  
+                    
+%         %%% OST_MTPlot %%%
+%         SoloParamHandle(obj,'movTimePlot','value',plot(value(OST_MTPlot),0,0, ...
+%                         'LineStyle','none','MarkerSize',5,'Marker','o','Color','b',...
+%                         'MarkerFaceColor','none')); hold on
+%         SoloParamHandle(obj,'OSTimePlot','value',plot(value(OST_MTPlot),0,0, ...
+%                         'LineStyle','none','MarkerSize',5,'Marker','o','Color','r',...
+%                         'MarkerFaceColor','none')); hold on
+        
+        
+    case 'startPlot'
+       
+    %%% side plot
+%         disp(value(sideList))
+%         disp(length(value(sideList)))
+        set(value(sideListPlot),'XData',1:length(value(sideList)),'YData',value(sideList));
+        set(value(concListPlot),'XData',value(concList(:,1)),'YData',value(concList(:,2)));
+        set(value(mixListPlot),'XData',value(mixList(:,1)),'YData',value(mixList(:,2)));
+
+        set(value(probOdor1SessionPlot),'XData',value(probOdor1Session(:,1)),...
+            'YData',value(probOdor1Session(:,2)));
+ 
+    case 'next_trial'
+        
+    %%% side plot
+        set(value(sideListPlot),'XData',1:length(value(sideList)),'YData',value(sideList));
+        set(value(premature_coutPlot),'XData',value(premature_cout(:,1)),'YData',value(premature_cout(:,2)));
+        set(value(too_latePlot),'XData',value(too_late(:,1)),'YData',value(too_late(:,2)));
+        set(value(choicePlot),'XData',value(choice(:,1)),'YData',value(choice(:,2)));
+        set(value(correctPlot),'XData',value(correct(:,1)),'YData',value(choice(:,2)));
+        set(value(incorrectPlot),'XData',value(incorrect(:,1)),'YData',value(incorrect(:,2)));
+        
+        
+    %%% perfOdor1 plot
+%     disp(value(stimVector)
+%     disp(value(performance1))
+        set(value(performanceOdor1Plot),'XData',value(stimVector),'YData',value(performanceOdor1));
+        
+    %%% perfOdor2 plot
+        set(value(performanceOdor2Plot),'XData',value(stimVector),'YData',value(performanceOdor2));
+        
+    %%% perfMix1 plot
+        set(value(performanceMix1Plot),'XData',value(stimVector),'YData',value(performanceMix1));
+        
+    %%% perfMix2 plot
+        set(value(performanceMix2Plot),'XData',value(stimVector),'YData',value(performanceMix2));
+        
+        if n_started_trials < 1
+            %%% OST1 plot
+            set(value(concProportionPlot),'YData',0);
+            %%% OST2 plot
+            set(value(mixProportionPlot),'YData',0);
+        else
+            %%% concProp1Plot
+            set(value(concProportionPlot),'XData', value(concsOdor1TrialN), 'YData',value(concProportionOdor1));
+        
+            %%% concProp2Plot
+            set(value(mixProportionPlot), 'XData', value(concsOdor2TrialN), 'YData',value(concProportionOdor2));
+        end
+        
+        
+        if n_started_trials < 1
+            %%% OSTOdor1 plot
+            set(value(odorSampTimeOdor1Plot),'XData',0,'YData',0);
+            %%% OSTOdor2 plot
+            set(value(odorSampTimeOdor2Plot),'XData',0,'YData',0);
+            %%% OSTMix1 plot
+            set(value(odorSampTimeMix1Plot),'XData',0,'YData',0);
+            %%% OSTMix2 plot
+            set(value(odorSampTimeMix2Plot),'XData',0,'YData',0);
+        else
+            %%% OSTOdor1 plot
+            set(value(odorSampTime1Plot),'XData',value(currentConc1(1:n_started_trials, 2)), ...
+                'YData',value(odorSamplingTimeOdor1Vector(1:n_started_trials)));
+            %%% OSTOdor2 plot
+            set(value(odorSampTime2Plot),'XData',value(currentConc2(1:n_started_trials, 2)), ...
+                'YData',value(odorSamplingTimeOdor2Vector(1:n_started_trials)));
+            %%% OSTMix1 plot
+            set(value(odorSampTime1Plot),'XData',value(currentConc1(1:n_started_trials, 2)), ...
+                'YData',value(odorSamplingTimeMix1Vector(1:n_started_trials)));
+            %%% OSTMix2 plot
+            set(value(odorSampTime2Plot),'XData',value(currentConc2(1:n_started_trials, 2)), ...
+                'YData',value(odorSamplingTimeMix2Vector(1:n_started_trials)));
+        end
+        
+        %%% biasPlot
+        set(value(probOdor1SessionPlot),'XData',value(probOdor1Session(:,1)),...
+            'YData',value(probOdor1Session(:,2)));
+        set(value(weightedBiasSessionPlot),'XData',value(weightedBiasSession(:,1)),...
+            'YData',value(weightedBiasSession(:,2)));
+        
+        
+%         if n_started_trials < 1
+%             %%% OST_MT plot
+%             set(value(movTimePlot),'XData',0,'YData',0);
+%             set(value(OSTimePlot),'XData',0,'YData',0);
+%         else
+%             %%% OST_MT plot
+%             set(value(movTimePlot),'XData',1 : length(value(movementTimeVector)),'YData',value(movementTimeVector));
+%             set(value(OSTimePlot),'XData',1 : length(value(odorSamplingTimeVector)),'YData',value(odorSamplingTimeVector));            
+%         end
+        
+        if n_started_trials + 1 >= value(xAxisLim)
+            i.value = value(i) + 1;
+            set(value(sidePlot),'xlim',[value(i) n_started_trials + 2]); %hold on
+%             set(value(OST_MTPlot),'xlim',[value(i) n_started_trials + 2]); %hold on
+        end
+
+end;

@@ -1,0 +1,82 @@
+function [] = SupportFunctions(obj, action)
+
+GetSoloFunctionArgs;
+
+switch action,
+    
+        
+        %% Saves parameters for stimulus presentation
+    case 'param_save'
+        
+        DeclareGlobals(obj, 'rw_args', {...
+            'backLight','stimLight','centerCm','viewingDistCm','screenOrientation','calibration',...
+            'cbTimePeriod','cbSizeDeg','checkerboard','edges','barWidtDeg',...
+            'stimPeriod','stimRepetitions','stimOrientation','stimDirection'});
+
+        %% Monitor properties
+screenOrientation = value(screenOri);  % 0 for vertical; 1 for horizontal
+screenBrightness = value(stimLight);   % value between 0 and 1 (full brightness)
+
+%% Alignement
+distanceCm = value(viewingDistCm);    % distance of eye to screen
+centerCm = value(centerPos);   % offset of projection of eye in the screen
+
+%% Stimulus properties
+orientation = [value(stimOrientation) value(stimDirection)];       % col 1: 0 for horizontal, 1 for vertical
+                           % col 2: 1 for right/down, -1 for left/up
+stimPeriod = value(barPeriod);           % stimulus period
+numCycles = 50;            % number of stimulus
+barWidthDeg =20;           % width of drifting bar
+edgesDeg = 0.1;            % screen extension for each side in percentage of
+% range in degrees
+cbFlag = 1;                % 0 no checkerboard; 1 checkerboard
+cbSizeDeg = 30;            % size of checkerboard pattern in degrees
+        
+        %% Screen Dimensions
+        screen_width_px = value(screenWidthPx);
+        screen_height_px = value(screenHeightPx);
+        diag_cm = value(diagIn)*2.54;
+        diag_px = sqrt(screen_width_px^2+screen_height_px^2);
+        
+        %% General stimulus properties
+        stim_type = value(currStimType);
+        stim_length = value(stimLength);
+        base_length = value(baseLength);
+        stim_ITI = value(ITI);
+        radius_cm = tan(value(currPatchDeg)/2*pi/180)*value(viewingDistCm);
+        radius_px = round(diag_px/diag_cm*radius_cm);
+        centre_px = [value(centreX), value(centreY)];
+        back_light = value(backLight);
+        stim_light = value(stimLight);
+        
+        stim_dir = value(currStimDir);
+        
+        %% Random dot properties
+        dot_lifetime = value(currDotLifeTime);
+        dot_coherence = value(currDotCoher)/100;
+        dot_speed_cm = tan(value(currDotSpeed)*pi/180)*value(viewingDistCm);
+        dot_speed_px = diag_px/diag_cm*dot_speed_cm;
+        if value(currDotSize) == 0
+            dot_size_px = 1;
+        else
+            dot_size_cm = tan(value(currDotSize)*pi/180)*value(viewingDistCm);
+            dot_size_px = round(diag_px/diag_cm*dot_size_cm);
+        end
+        dot_density = value(currDotDensity);
+        dot_number = floor(dot_density*radius_px^2 /(dot_size_px/2)^2);
+        
+        
+        %% Grating properties
+        grat_type = value(currGratType);
+        grat_temp_freq = value(currGratTempFreq);
+        grat_spat_freq = 1/((tan(1/value(currGratSpatFreq)*pi/180)*value(viewingDistCm))*diag_px/diag_cm);
+        
+        save('c:/ratter/next_stimulus',...
+            'stim_dir', 'stim_type','stim_length','base_length','radius_px','centre_px','back_light','stim_light',...
+            'dot_lifetime','dot_speed_px','dot_size_px','dot_number','dot_coherence','dot_density',...
+            'grat_type','grat_temp_freq','grat_spat_freq');
+        
+    otherwise,
+        error(['Don''t know how to deal with action ' action]);
+        
+end;

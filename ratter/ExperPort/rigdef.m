@@ -1,0 +1,10 @@
+function rd = rigdef()
+rd.PokesPlot.WinPos =  [6   347   435   699];
+rd.dispatcher.WinPos = [ 450   503   405   515];
+rd.BA_Headfixed_Withholding_Laser.Main.WinPos = [8    94   620   410];
+rd.BA_Headfixed_Withholding_Laser.LaserParams.WinPos = [     6    10   830   200];
+rd.BA_Headfixed_Withholding_Laser.sound.low.amp = (-85)/20 ;
+rd.BA_Headfixed_Withholding_Laser.sound.low.freq = 6000 ;
+rd.BA_Headfixed_Withholding_Laser.sound.high.amp = (-80)/20 ;
+rd.BA_Headfixed_Withholding_Laser.sound.high.freq = 4000 ;
+rd.BA_Headfixed_Withholding_Laser.sound.noise.amp = 0.0007;

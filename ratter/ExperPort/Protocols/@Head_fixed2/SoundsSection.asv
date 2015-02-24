@@ -1,0 +1,119 @@
+
+function  [x, y]  =  SoundsSection(obj, action, x,  y)
+
+GetSoloFunctionArgs;
+
+% Deals with sound generation and uploading to RTLSoundMachine
+
+switch action,
+    case 'init'
+
+        gcf;
+
+        SoundManagerSection(obj, 'init');
+
+        %For Error Tone
+
+        EditParam(obj, 'ErrorSoundSPL',     70,  x, y, 'label', 'Error Sound pressure', ...
+            'labelfraction', 0.6);   next_row(y);
+        EditParam(obj, 'ErrorSoundDur',    0.3,  x, y, 'label', 'Error Sound duration', ...
+            'labelfraction', 0.6);   next_row(y);
+        EditParam(obj, 'ErrorSoundFreq',    6000,  x, y, 'label', 'Error Sound frequency', ...
+            'labelfraction', 0.6);   next_row(y);
+
+        set_callback({ErrorSoundSPL, ErrorSoundDur, ErrorSoundFreq}, {'SoundsSection', 'set_tone'});
+
+
+
+        %---------
+
+
+        sound_samp_rate = SoundManagerSection(obj, 'get_sample_rate');
+        SoloParamHandle(obj, 'SoundSampRate', 'value', sound_samp_rate);
+
+        SoloParamHandle(obj, 'IdErrorTone', 'value', 0);
+        SoundManagerSection(obj, 'declare_new_sound', 'ErrorTone');
+        IdErrorTone.value = SoundManagerSection(obj, 'get_sound_id', 'ErrorTone');
+
+        PushbuttonParam(obj, 'Play_ErrorTone', x,y, 'label', 'Play Error Tone', 'position');next_row(y);
+        set_callback(Play_ErrorTone,{'SoundManagerSection', 'play_sound', 'ErrorTone'});
+
+        SubHeaderParam(obj, 'SubHeaderSoundSection','Sound Section',x,y); next_row(y);
+
+        SoloFunctionAddVars('StateMatrixSection', 'rw_args', {'IdErrorTone','ErrorSoundDur'});
+
+        SoundsSection(obj, 'set_tone');
+        SoundsSection(obj, 'next_trial');
+
+    case 'set_tone'
+
+
+        %%%%%Error Tone-----------------------
+
+        switch value(ErrorSound)
+            case 'on'
+
+                t=0:(1/value(SoundSampRate)):value(ErrorSoundDur);
+                t=t(1:(end-1));
+
+                setErrorTone = 10^((-74.5) / 20) * (sin(2 * pi * value(ErrorSoundFreq) * t));
+                ERRORSOUND_SPL_70 = value(ErrorSoundSPL) - 70;
+                errorsound = (10^(ERRORSOUND_SPL_70 / 20)) * setErrorTone;
+
+            case 'off'
+
+                t=0:(1/value(SoundSampRate)):value(ErrorSoundDur);
+                t=t(1:(end-1));
+
+                ErrorSoundSPL.value=0;
+                setErrorTone = 10^((-74.5) / 20) * (sin(2 * pi * value(ErrorSoundFreq) * t));
+                ERRORSOUND_SPL_70 = value(ErrorSoundSPL) - 70;
+                errorsound = (10^(ERRORSOUND_SPL_70 / 20)) * setErrorTone;
+
+        end
+
+        %%%%%%%%%%
+
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        %"set"_sound using SoundManagerSection
+        
+        SoundManagerSection(obj, 'set_sound', 'ErrorTone', errorsound);
+
+
+    case 'next_trial'
+
+        switch value(ErrorSound)
+
+            case 'on'
+
+                t=0:(1/value(SoundSampRate)):value(ErrorSoundDur);
+                t=t(1:(end-1));
+
+                setErrorTone = 10^((-74.5) / 20) * (sin(2 * pi * value(ErrorSoundFreq) * t));
+                ERRORSOUND_SPL_70 = value(ErrorSoundSPL) - 70;
+                errorsound = (10^(ERRORSOUND_SPL_70 / 20)) * setErrorTone;
+
+
+            case 'off'
+
+                t=0:(1/value(SoundSampRate)):value(ErrorSoundDur);
+                t=t(1:(end-1));
+
+                ErrorSoundSPL.value=0;
+                setErrorTone = 10^((-74.5) / 20) * (sin(2 * pi * value(ErrorSoundFreq) * t));
+                ERRORSOUND_SPL_70 = value(ErrorSoundSPL) - 70;
+                errorsound = (10^(ERRORSOUND_SPL_70 / 20)) * setErrorTone;
+
+        end
+
+
+        SoundManagerSection(obj, 'set_sound', 'ErrorTone', errorsound);
+        SoundManagerSection(obj, 'send_not_yet_uploaded_sounds');
+
+    otherwise
+        error(['Don''t know how to handle action ' action]);
+end;
+
+return;

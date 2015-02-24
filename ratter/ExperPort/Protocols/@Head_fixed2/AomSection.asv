@@ -1,0 +1,104 @@
+% Typical section code-- this file may be used as a template to be added
+% on to. The code below stores the current figure and initial position when
+% the action is 'init'; and, upon 'reinit', deletes all SoloParamHandles
+% belonging to this section, then calls 'init' at the proper GUI position
+% again.
+
+
+% [x, y] = YOUR_SECTION_NAME(obj, action, x, y)
+%
+% Section that takes care of YOUR HELP DESCRIPTION
+%
+% PARAMETERS:
+% -----------
+%
+% obj      Default object argument.
+%
+% action   One of:
+%            'init'      To initialise the section and set up the GUI
+%                        for it
+%
+%            'reinit'    Delete all of this section's GUIs and data,
+%                        and reinit, at the same position on the same
+%                        figure as the original section GUI was placed.
+%
+% x, y     Relevant to action = 'init'; they indicate the initial
+%          position to place the GUI at, in the current figure window
+%
+% RETURNS:
+% --------
+%
+% [x, y]   When action == 'init', returns x and y, pixel positions on
+%          the current figure, updated after placing of this section's GUI.
+
+function [x, y] = AomSection(obj, action, x, y)
+
+GetSoloFunctionArgs;
+
+switch action
+
+    case 'init',
+        %set vlve duration here
+        PushbuttonParam(obj, 'SetAomParams', x, y, 'label','Set aom parameters', ...
+            'position', [x y 200 25], 'BackgroundColor', [0.1 0.5 0.5]); next_row(y,1.3);
+        %PushbuttonParam(obj, 'SetValvesOpeningMatrix', x, y, 'label','Set valves opening matrix', ...
+        %    'position', [x y 200 25], 'BackgroundColor', [0.1 0.5 0.5]); next_row(y,1.3);
+        set_callback(SetAomParams, {'AomSection', 'setAomMatrix'}); %next_row(y,1);
+        %set_callback(SetValvesOpeningMatrix, {'WaterProbSection', 'setValvesOpeningMatrix'}); %next_row(y,1);
+
+        DispParam(obj, 'frequency', 10, x, y, 'label', 'light frequency', 'labelfraction', 0.6);next_row(y, 1);
+        DispParam(obj, 'pulse_num', -1, x, y, 'label', 'pulse#', 'labelfraction', 0.6);next_row(y, 1);
+        DispParam(obj, 'delay', 0.1, x, y, 'label', 'delay to light onset', 'labelfraction', 0.6);next_row(y, 1);
+        DispParam(obj, 'width', 0.01, x, y, 'label', 'pulse width', 'labelfraction', 0.6);next_row(y, 1);
+        DispParam(obj, 'amp', 1, x, y, 'label', 'light intesnsity', 'labelfraction', 0.6);next_row(y, 1);
+        DispParam(obj, 'prob', 1, x, y, 'label', 'light probability', 'labelfraction', 0.6);next_row(y, 1);
+
+        NumEditParam(obj, 'lightAmp', 0.1, x, y, 'label', 'light amplitude'); next_row(y,1);%10*value Volts (value 0.1-->1)
+        NumEditParam(obj, 'lightDelay', 0.1, x, y, 'label', 'light delay'); next_row(y,1);
+        NumEditParam(obj, 'pulseNum', -1, x, y, 'label', 'number of pulses'); next_row(y,1);
+        NumEditParam(obj, 'pulseWidth', 0.01, x, y, 'label', 'pulse width');next_row(y,1);
+        NumEditParam(obj, 'IPI', 0.09, x, y, 'label', 'inter pulse interval');next_row(y,1);
+        NumEditParam(obj, 'lightProb', 1, x, y, 'label', 'light probability');next_row(y,1);
+
+        SubHeaderParam(obj, 'aomParams', 'aom', x, y); next_row(y,2);
+
+        SoloParamHandle(obj, 'aom');
+        aom.value = ones(1,1000);
+
+        SoloFunctionAddVars('StateMatrixSection', 'rw_args', ...
+            {'lightDelay', 'pulseNum', 'pulseWidth','IPI', 'lightProb'});
+
+    case 'setAomMatrix'
+
+        frequency.value = 1/(value(pulseWidth)+value(IPI));
+        pulse_num.value = value(pulseNum);
+        delay.value = value(lightDelay);
+        width.value = value(pulseWidth);
+        prob.value = value(lightProb);
+
+
+    case 'next_trial',
+
+        if n_done_trials == 0,
+            return,
+        end;
+
+
+        aom.value = value(timeLvalve);
+
+
+        %   ------------------------------------------------------------------
+        %                CLOSE
+        %   ------------------------------------------------------------------
+    case 'close'
+        % Delete all SoloParamHandles who belong to this object and whose
+        % fullname starts with the name of this mfile:
+
+        if exist('myfig', 'var') && isa(myfig, 'SoloParamHandle') && ishandle(value(myfig)),
+            delete(value(myfig));
+        end;
+        delete_sphandle('owner', ['^@' class(obj) '$'], 'fullname', ['^' mfilename '_']);
+
+
+
+end;

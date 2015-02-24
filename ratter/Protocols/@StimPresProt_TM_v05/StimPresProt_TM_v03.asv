@@ -1,0 +1,75 @@
+function [obj] = StimPresProt_TM_v03(varargin)
+obj = class(struct, mfilename, pokesplot, saveload);
+%---------------------------------------------------------------
+%   BEGIN SECTION COMMON TO ALL PROTOCOLS, DO NOT MODIFY
+%---------------------------------------------------------------
+
+% If creating an empty object, return without further ado:
+if nargin==0 || (nargin==1 && ischar(varargin{1}) && strcmp(varargin{1}, 'empty')),
+    return;
+end;
+
+if isa(varargin{1}, mfilename), % If first arg is an object of this class itself, we are
+    % Most likely responding to a callback from
+    % a SoloParamHandle defined in this mfile.
+    if length(varargin) < 2 || ~ischar(varargin{2}),
+        error(['If called with a "%s" object as first arg, a second arg, a ' ...
+            'string specifying the action, is required\n']);
+    else action = varargin{2}; varargin = varargin(3:end);
+    end;
+else % Ok, regular call with first param being the action string.
+    action = varargin{1}; varargin = varargin(2:end);
+end;
+if ~isstr(action), error('The action parameter must be a string'); end;
+
+GetSoloFunctionArgs(obj);
+
+%---------------------------------------------------------------
+%   END OF SECTION COMMON TO ALL PROTOCOLS, MODIFY AFTER THIS LINE
+%---------------------------------------------------------------
+
+global stim_counter stim_repetition;
+
+switch action,
+    
+    case 'init'
+        
+        SetGUI(obj, 'init');
+        
+    %% Starts preparing next trial    
+    case 'prepare_next_trial'
+      
+        fprintf(1, 'Preparing next trial -- making the next state matrix\n');
+    
+        %% Prepares next trial parameters
+        SupportFunctions(obj,'prepare_variables');
+        SupportFunctions(obj,'save_variables');
+        
+        %% Sets state machine for next trial
+        StateMatrixSection(obj, 'next_trial');
+    
+    %% Current trial is completed    
+    case 'trial_completed'
+        
+        fprintf(1, ['\nFrom the beginning of this trial #%d to the\n' ...
+            'start of the next, %g seconds elapsed.\n\n'], n_done_trials, ...
+            parsed_events.states.state_0(2,1) - parsed_events.states.state_0(1,2));
+        
+        %% Updates Pokesplot 
+        PokesPlotSection(obj, 'trial_completed');
+        
+        if stim_counter > stim_repetition
+           dispatcher('Stop'); 
+        end
+        
+    case 'update'
+        PokesPlotSection(obj, 'update');
+        
+    case 'close'
+        PokesPlotSection(obj, 'close');
+        SetGUI(obj, 'close');
+        
+    otherwise,
+        warning('Unknown action! "%s"\n', action);
+        
+end;

@@ -1,0 +1,177 @@
+
+function [x, y] = OdorSection(obj, action, x, y)
+
+GetSoloFunctionArgs;
+OLF_IP='nan';
+
+if ~strcmpi(value(OLF_IP), 'nan'), % if the olfactometer is connected
+    olf = value(olf_meter);
+end
+
+switch action
+    case 'init',   % ---------- CASE INIT -------------
+
+        % Start adding GUI elements:
+        SoloParamHandle(obj, 'my_gui_info', 'value', [x y gcf]);
+
+        SoloParamHandle(obj, 'odor_list', 'value', zeros(1, value(maxtrials))); % vector of which odor will be presented on each trial
+
+        SoloFunctionAddVars('StateMatrixSection', 'ro_args', {'odor_list'});
+
+        SoloFunctionAddVars('Head_fixed2', 'ro_args', {'odor_list'});
+
+        % Initialize olfactometer settings
+        SoloParamHandle(obj, 'OLF_IP','value','nan');
+        SoloParamHandle(obj,'olf','value','nan');
+
+        SoloParamHandle(obj, 'olf_bank_C_ID','value','nan');
+        SoloParamHandle(obj,'olf_bank_H_ID','value','nan');
+
+        OLF_IP.value = Settings('get', 'RIGS', 'olfactometer_server');
+        olf.value = SimpleOlfClient(value(OLF_IP),3336);
+        olf_bank_C_ID.value  = Settings('get', 'RIGS', 'olfactometer_bank_C');
+        olf_bank_H_ID.value  = Settings('get', 'RIGS', 'olfactometer_bank_H');
+
+
+        SoloFunctionAddVars('StateMatrixSection', 'ro_args',{'OLF_IP',...
+            'olf_bank_C_ID', 'olf_bank_H_ID'});
+
+        SoloFunctionAddVars('Head_fixed2', 'ro_args',{'olf',...
+            'olf_bank_C_ID', 'olf_bank_H_ID'});
+
+
+        % set values for layout of SPH chart of odor parameters
+
+        origin = [425 200];
+        odor_menu = {'not active', 'neutral', 'go','nogo', 'wait','active avoid'};
+        SoloParamHandle(obj, 'trial_types', 'value', odor_menu);
+        SoloFunctionAddVars('StateMatrixSection', 'rw_args',trial_types);
+        SoloFunctionAddVars('Head_fixed2', 'rw_args',trial_types);
+        % set the odor name and odor valve associated
+
+        for ind1 = 1:2
+            x = origin(1);
+
+            for ind2 = 1:3
+
+                y = 175+origin(2)+origin(2)/(2*ind1-1);
+                curr_odor=(ind1-1)*3+ind2;
+
+                DispParam(obj, strcat('nr_odor', num2str(curr_odor),'trials'), 0, x, y, ...
+                    'label', strcat('Nr.Odor',num2str(curr_odor) ,'trials'), 'labelfraction', 0.6); next_row(y, 1);
+                DispParam(obj, strcat('percent_correct', num2str(curr_odor)), 0, x, y, ...
+                    'label', strcat('Odor',num2str(curr_odor) ,'correct (%)'), 'labelfraction', 0.6); next_row(y, 1.1);
+
+
+                % Olfactometer bank associated with the odor
+                NumeditParam(obj, strcat('odor_bank', num2str(curr_odor)),3,x,y,'label','odor bank');next_row(y,1);
+
+                %Odor valve associated with the odor
+                NumeditParam(obj, strcat('odor_valve', num2str(curr_odor)),curr_odor,x,y,'label','odor valve');next_row(y,1);
+
+
+                % Odor US
+                h=MenuParam(obj, strcat('odor_type', num2str(curr_odor)), odor_menu, 1, x, y,'label','odor type');next_row(y,1);
+                eval(strcat('odorType', num2str(curr_odor),'=h;'));
+
+                set_callback(eval(strcat('odorType', num2str(curr_odor))), {'OdorSection', 'set_future_odors'});
+
+                SubHeaderParam(obj, strcat('odor_num', num2str(curr_odor)), strcat('odor', num2str(curr_odor)), x, y);
+
+                SoloFunctionAddVars('StateMatrixSection', 'ro_args',...
+                    {strcat('odorType', num2str(curr_odor)), strcat('odor_bank', num2str(ind1)), strcat('odor_valve', num2str(ind1))});
+
+
+                SoloFunctionAddVars('Head_fixed2', 'rw_args',...
+                    {strcat('odorType', num2str(curr_odor)), strcat('nr_odor', num2str(curr_odor),'trials'),...
+                    strcat('percent_correct', num2str(curr_odor))});
+
+
+
+                x=x+200;
+            end
+        end
+        odor_type1.value=4;
+        odor_type2.value=3;
+        odor_type3.value=5;
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % let StateMatrixSection see Bank Number and Valve Number for current trial 1
+        %added on August 12 2010---------------------------------------------
+
+        SoloParamHandle(obj,'OlfBankThree','value', 3);
+        SoloParamHandle(obj,'OlfBankEight','value', 8);
+
+        SoloParamHandle(obj,'ValveBankThree','value', 0);
+
+        SoloFunctionAddVars('StateMatrixSection', 'ro_args', {'OlfBankThree','OlfBankEight','ValveBankThree'});
+
+        OdorSection(obj, 'set_future_odors');
+        OdorSection(obj, 'update_odor');
+
+    case 'set_future_odors', % ----------  SET_FUTURE_ODORS  ----------------
+
+        ol = value(odor_list);
+        starting_at = n_started_trials+1;
+
+        odors=[];
+        for i=1:6
+            if ~strcmp(eval(['value(odor_type' num2str(i),')']),'not active')
+                OdorSection(obj, 'set_odor_params');
+                odors=[odors;i];
+            end
+        end
+
+        for i=starting_at:maxtrials
+            x=ceil(rand*length(odors));
+            ol(i)=odors(x);
+            if length(odors)>10
+                
+                try
+                    if ol(i)==ol(i-1) && ol(i)==ol(i-2) && ol(i)==ol(i-3)
+                        while odors(x)==ol(i-1)
+                            x=ceil(rand*length(odors));
+                            ol(i)=odors(x);
+                            
+                        end
+                    end
+                catch
+                end
+            end
+        end
+        
+        % not tested. designed to remove large numbers of repeats
+        for i=4:length(ol)-1
+            o4=ol(i-3);
+            o3=ol(i-2);
+            o2=ol(i-1);
+            o1=ol(i);
+            if o4==o1 && o3==o1 && o2==o1
+                ol(i)=ol(i+1);
+                ol(i+1)=o1(i);
+            end
+        end
+        odor_list.value=ol;
+
+        Write(value(olf), ['BankFlow' num2str(value(OlfBankThree)) '_Actuator'], 100);
+        Write(value(olf), ['BankFlow' num2str(value(OlfBankEight)) '_Actuator'], 100);
+
+
+    case 'reinit',       % ---------- CASE REINIT -------------
+        currfig = gcf;
+
+        % Get the original GUI position and figure:
+        x = my_gui_info(1); y = my_gui_info(2); figure(my_gui_info(3));
+
+        % Delete all SoloParamHandles who belong to this object and whose
+        % fullname starts with the name of this mfile:
+        delete_sphandle('owner', ['^@' class(obj) '$'], ...
+            'fullname', ['^' mfilename]);
+
+        % Reinitialise at the original GUI position and figure:
+        [x, y] = feval(mfilename, obj, 'init', x, y);
+
+        % Restore the current figure:
+        figure(currfig);
+
+end;

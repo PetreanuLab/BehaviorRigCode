@@ -1,0 +1,345 @@
+function StimulusPresentation_Spatial(bugMe)
+% %
+% %  WARNING BA timing of this script may not be reliable
+% % Specifically we do not know how much jitter there is in the stimulus
+% presentation relative to the event times that Bcontrol ASSUMES.
+% So the animal could be responding to the visual stimulus, but the state
+% that we have in bcontrol (say for a change in the visual stimulus) may
+% not be happening exactly when the visual stimulus occurs.
+% This should be tested eventually. Especially for physiology
+%% Imports
+import Devices.NI.DAQmx.*
+r = visRigDefs;
+%% Initiations and instatiations of persistent variables
+counter=0;
+counterName = 'init';
+audio_freq = 44000;
+bpunish = 0;
+boutCome = 0;
+% ev.time = [];ev.thiscounter = [];ev.counterName= [];
+global hCtr;
+persistent  data
+persistent w rect frameRate
+persistent stimulus iLocChange
+persistent elapsedTime lastTrigger cueTime
+persistent rewardSound noiseSound cueSound
+persistent s1 s2
+
+close all;
+
+%% Interrupt section
+if nargin < 1
+    killMe = false;
+elseif bugMe
+    killMe = bugMe;
+end
+
+if killMe && ~isempty(hCtr)
+    hCtr.stop();
+    return;
+elseif ~isempty(hCtr)
+    delete(hCtr);
+end
+
+%% Opens Psychtoolbox window
+% Open a double buffered fullscreen window and select a gray background
+% color:
+screenNumber = 2; % r.visualScreen; % Stimulus screen
+if isempty(w)
+    [w, rect]  = Screen('OpenWindow', screenNumber, 0,[], 8, 2);
+    Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    frameRate=Screen('FrameRate',screenNumber);
+    
+end
+
+%% NIDAQ Configuration
+%Create AI Task
+deviceName = 'Dev1';
+hCtr = Task('myTask');
+hCtr.createAIVoltageChan(deviceName,0,'myTriggerAI0');
+hCtr.cfgDigEdgeStartTrig('PFI0');
+hCtr.cfgSampClkTiming(10000,'DAQmx_Val_FiniteSamps',2);
+hCtr.registerDoneEvent(@FrameStartCallback); %Both DAQmx_Val_SampleClock and DAQmx_Val_SampleCompleteEvent yield same results
+pause(1); %Give the registration a chance to 'settle' before starting Task. (otherwise, first event is skipped)
+hCtr.start();
+
+
+%% Trigger received
+    function FrameStartCallback(~,~)
+        %         disp('Trigger received')
+        %         ev.time(end+1) = now;
+        %         ev.thiscounter(end+1) = counter;
+        %         ev.counterName(end+1) = counterName;
+        %
+        
+        switch counter
+            case 0
+                bpunish = 0;
+                counter = 1;
+                counterName = 'Prepare Stimulus';
+                PrepareStimulusAndCue();
+                stop(hCtr);
+                start(hCtr);
+                
+            case 1
+                counter = 2;
+                counterName = 'Present Cue and Stim';
+                cueTime = GetSecs();
+                stop(hCtr);
+                start(hCtr);
+                PresentStimulusAndCue();
+                counter=0; % if you finished get ready to restart
+                %
+            case 2
+                counterName = 'Trigger';
+                stop(hCtr);
+                start(hCtr);
+                counter = 3;
+                lastTrigger = tic;
+                
+            case 3
+                counterName = 'Trigger2';
+                TriggerDetected();
+                stop(hCtr);
+                start(hCtr);
+                boutCome = 1;
+                counter=0; % if you finished get ready to restart
+                
+                
+                
+        end
+        
+    end
+
+    function PrepareStimulusAndCue()
+        s = load(fullfile(r.DIR.ratter,'next_trial'));
+        data = s.param; clear s
+        
+        s1 = RandStream('mlfg6331_64','seed',data.rand_seed);
+        s2 = RandStream('mlfg6331_64','seed',0);
+        
+        % % Prepare Cue Audio
+        y =  [sin((1 : audio_freq*data.cue_length)/audio_freq*2*pi*data.cue_frequency)]*data.sound_volume;
+        wavedata = zeros(2,data.cue_length*audio_freq);
+        if data.cue_rightSpeaker, wavedata(2,:) =y; end
+        if data.cue_leftSpeaker, wavedata(1,:) =y; end
+        cueSound = audioplayer(wavedata,audio_freq);
+        
+        % % Perpare other sounds
+        rewardSound = audioplayer(sin((1:audio_freq*(data.reward_sound_length))/audio_freq*2*pi*1000)*(data.sound_volume),audio_freq);
+        noiseSound = audioplayer((rand(s2,audio_freq*(data.error_sound_length),1) - 0.5)*(data.sound_volume),audio_freq);
+        
+        % % Stimulus
+        % % Prepare Dots
+        for iLoc = 1:3 % NOTE iLoc 1 is always the valid location, iLoc 3 is the changed stimulus
+            % Dots speed
+            dotSpeedPerFrame = data.stimulus(iLoc).dot_speed_px/frameRate;
+            
+            % Initiates the dots' centres
+            stimulus(iLoc).dotCentrePolar = [rand(s1,1,data.stimulus(iLoc).dot_number)*2*pi-pi;...
+                sqrt(rand(s1,1,data.stimulus(iLoc).dot_number))*data.stimulus(iLoc).radius_px];
+            
+            nDotLimit = round(data.stimulus(iLoc).dot_number*(1-data.stimulus(iLoc).dot_coherence)/8);
+            sDotLimit = round(data.stimulus(iLoc).dot_number*(1-data.stimulus(iLoc).dot_coherence)/4);
+            eDotLimit = round(data.stimulus(iLoc).dot_number*(1-data.stimulus(iLoc).dot_coherence)*3/8);
+            wDotLimit = round(data.stimulus(iLoc).dot_number*(1-data.stimulus(iLoc).dot_coherence)/2);
+            neDotLimit = round(data.stimulus(iLoc).dot_number*(1-data.stimulus(iLoc).dot_coherence)*5/8);
+            seDotLimit = round(data.stimulus(iLoc).dot_number*(1-data.stimulus(iLoc).dot_coherence)*3/4);
+            swDotLimit = round(data.stimulus(iLoc).dot_number*(1-data.stimulus(iLoc).dot_coherence)*7/8);
+            nwDotLimit = round(data.stimulus(iLoc).dot_number*(1-data.stimulus(iLoc).dot_coherence));
+            
+            stimulus(iLoc).dotDirection = zeros(2,data.stimulus(iLoc).dot_number);
+            
+            % Change the way direction and orientation is assessed
+            % Just two orientations and rotate the whole frame by a specific
+            % angle
+            stimulus(iLoc).dotDirection(:,1:nDotLimit) = repmat([0; -1]*dotSpeedPerFrame,1,nDotLimit);
+            stimulus(iLoc).dotDirection(:,nDotLimit+1:sDotLimit) = repmat([0; 1]*dotSpeedPerFrame,1,sDotLimit-nDotLimit);
+            stimulus(iLoc).dotDirection(:,sDotLimit+1:eDotLimit) = repmat([1; 0]*dotSpeedPerFrame,1,eDotLimit -sDotLimit);
+            stimulus(iLoc).dotDirection(:,eDotLimit+1:wDotLimit) = repmat([-1; 0]*dotSpeedPerFrame,1,wDotLimit-eDotLimit);
+            stimulus(iLoc).dotDirection(:,wDotLimit+1:neDotLimit) = repmat([sqrt(2)/2; -sqrt(2)/2]*dotSpeedPerFrame,1,neDotLimit-wDotLimit);
+            stimulus(iLoc).dotDirection(:,neDotLimit+1:seDotLimit) = repmat([sqrt(2)/2; sqrt(2)/2]*dotSpeedPerFrame,1,seDotLimit-neDotLimit);
+            stimulus(iLoc).dotDirection(:,seDotLimit+1:swDotLimit) = repmat([-sqrt(2)/2; sqrt(2)/2]*dotSpeedPerFrame,1,swDotLimit-seDotLimit);
+            stimulus(iLoc).dotDirection(:,swDotLimit+1:nwDotLimit) = repmat([-sqrt(2)/2; -sqrt(2)/2]*dotSpeedPerFrame,1,nwDotLimit-swDotLimit);
+            
+            if data.stimulus(iLoc).dot_coherence>0
+                coherentDirection = [sin(data.stimulus(iLoc).stim_dir*pi/180); -cos(data.stimulus(iLoc).stim_dir*pi/180)];
+                
+                stimulus(iLoc).dotDirection(:,nwDotLimit+1:end) =  repmat(coherentDirection*dotSpeedPerFrame,1,data.stimulus(iLoc).dot_number-nwDotLimit);
+            end
+            % Maybe include permutation of dotDirection so that the
+            % order of position reset is randomized over the different
+            % directions
+            stimulus(iLoc).dotRem = rem(1:data.stimulus(iLoc).dot_number,data.stimulus(iLoc).dot_lifetime);
+            
+        end
+        
+        % Which Stimulus Location is changing
+        data.validTrial
+        if data.validTrial
+            iLocChange = 1;
+        else
+            iLocChange = 2;
+        end
+        
+        
+        % % Prepare whitenoise for Invalide trial  % TO DO data.sound_invalid_volume
+        disp('stimulus prepared');
+        
+        
+    end
+
+
+    function PresentStimulusAndCue()
+        bchangedStim =0; bstartStim = 0; bstopStimulus = 0;
+        priorityLevel=MaxPriority(w);
+        Priority(priorityLevel);
+        
+        % % Present Cue
+        Screen('FillRect',w, uint8(data.background_level),rect);
+        rad = data.stimulus(1).radius_px;
+        x0 = data.cue_centre_px(1)-rad;
+        y0 = data.cue_centre_px(2)-rad;
+        Screen('FillOval',w,255,[x0,y0,x0+2*rad,y0+2*rad]);
+        play(cueSound);
+        vblcue(1) = Screen('Flip', w);
+        
+        % % End Cue
+        Screen('FillRect',w, uint8(data.background_level),rect);
+        vblcue(2) = Screen('Flip', w, cueTime+data.cue_length);
+        bchangedStim =0; bstartStim = 0;
+        
+        actualCue_length = diff(vblcue);
+        fprintf('Cue presented\t\t%1.0fms\tActual Cue Length %1.3f vs %1.3f\n', (actualCue_length-data.cue_length)*1000,actualCue_length, data.cue_length)
+        
+        
+        vbl = vblcue(2);
+        
+        % Stimulus Time has NOT finished yet
+        
+        endStimulusTime = cueTime +...
+            data.cue_length +...
+            data.stim_delay +...
+            data.stim_length;
+        stimulusOnsetTime = (cueTime +...
+            data.cue_length +...
+            data.stim_delay );
+        extraTime=0.3; % this exists because a response at the very end of the stimulus window, can result in boutCome after the stimulus period
+        % but outcomes Visual stimuli and sound should still occur
+        while GetSecs() <  endStimulusTime +extraTime
+            
+            if GetSecs() >  endStimulusTime
+                bstopStimulus = 1;
+            end
+            % Trigger has happen While Prese_length)ntStimulus is happening
+            % There will be correct or error events
+            if boutCome
+                boutCome = 0; % reset outcome
+                
+                
+                if ~bpunish % reward sound
+                    disp('correct lick')
+                    if data.trial_sounds
+                        play(rewardSound);
+                    end
+                    bstopStimulus = 1; % always stop stimulus after an outcome
+                    Screen('FillRect',w, uint8(data.inter_stim_level),rect);
+                    Screen('Flip', w);
+                    Priority(0);
+                    disp('stimulus stopped');
+                    return;
+                else  % error sound  % BA stimulus doesn't end on mistake trials because that might be rewarding
+                    disp('error lick')
+                    if data.trial_sounds
+                        play(noiseSound);
+                    end
+                end
+                
+                if  bpunish && data.visual_error    % flicker screen
+                    bstopStimulus = 1; % always stop stimulus after an outcome
+                    Screen('FillRect',w, uint8(data.inter_stim_level),rect);
+                    Screen('Flip', w);
+                    Priority(0);
+                    disp('stimulus stopped');
+                    
+                    nFramesError = round(data.error_length*frameRate);
+                    for j=1:nFramesError
+                        if mod(j,data.error_lifetime)/data.error_lifetime<=0.5
+                            Screen('FillRect',w, uint8(data.background_level),rect);
+                        else
+                            Screen('FillRect',w, uint8(data.stimulus(1).lumlevel)*0.2,rect);
+                        end
+                        Screen('Flip', w);
+                    end
+                    Screen('FillRect',w, uint8(data.inter_stim_level),rect);
+                    Screen('Flip', w);
+                    Priority(0);
+                    disp('error stimulus')
+                    return;
+                end
+                
+            end
+            
+            if ~bstopStimulus &  GetSecs() >= ( stimulusOnsetTime - (1/frameRate))   % % Stimulus Onset Time
+                
+                if ~bstartStim;               startStimTime = GetSecs();      bstartStim = 1;      end
+                % Converts dots positions to cartisian coordinates
+                for iLoc = 1:2
+                    stimulus(iLoc).dotCentre = [cos(stimulus(iLoc).dotCentrePolar(1,:)).*stimulus(iLoc).dotCentrePolar(2,:); sin(stimulus(iLoc).dotCentrePolar(1,:)).*stimulus(iLoc).dotCentrePolar(2,:)];
+                    Screen('DrawDots', w, stimulus(iLoc).dotCentre, data.stimulus(iLoc).dot_size_px, uint8(data.stimulus(iLoc).lumlevel), data.stimulus(iLoc).centre_px,1);
+                end
+                Screen('DrawingFinished', w); % Tell PTB that no further drawing commands will follow before Screen('Flip')
+                vbl(end+1) = Screen('Flip', w,  vbl(end)+0.5*1/frameRate);
+                
+                % % ChangeStimulus time
+                if ~bchangedStim && ...
+                        GetSecs() >= (stimulusOnsetTime+data.changeStimDelay -(1/frameRate))
+                    stimulus(iLocChange).dotDirection =  stimulus(3).dotDirection;
+                    bchangedStim =1;
+                end % OPTIONALLY ADD INVALID SOUND HERE
+                
+                for iLoc = 1:2
+                    
+                    % Moves dots
+                    stimulus(iLoc).dotCentre = stimulus(iLoc).dotCentre + stimulus(iLoc).dotDirection;
+                    
+                    % Converts updated dots positions to polar coordinates
+                    stimulus(iLoc).dotCentrePolar = [atan2(stimulus(iLoc).dotCentre(2,:),stimulus(iLoc).dotCentre(1,:)); sqrt(stimulus(iLoc).dotCentre(1,:).^2 + stimulus(iLoc).dotCentre(2,:).^2)];
+                    
+                    % Redraws the position of dead dots
+                    i = round(startStimTime-GetSecs()/frameRate);
+                    frameRem = rem(i,data.stimulus(iLoc).dot_lifetime);
+                    stimulus(iLoc).dotCentrePolar(:, stimulus(iLoc).dotRem==frameRem) = ...
+                        [rand(s1,1,sum( stimulus(iLoc).dotRem==frameRem))*2*pi-pi;...
+                        sqrt(rand(s1,1,sum( stimulus(iLoc).dotRem==frameRem)))*data.stimulus(iLoc).radius_px];
+                    
+                    % Detects whether a border was reached
+                    stimulus(iLoc).dotCentrePolar(1, stimulus(iLoc).dotCentrePolar(2,:) > data.stimulus(iLoc).radius_px) = stimulus(iLoc).dotCentrePolar(1, stimulus(iLoc).dotCentrePolar(2,:) > data.stimulus(iLoc).radius_px)+pi;
+                end
+                
+            end
+            
+        end
+        actualStim_length = GetSecs - extraTime - startStimTime;
+        fprintf('STIMULUS presented\t\t %1.0fms\tActual Stimulus Length %1.3f vs %1.3f\n', (actualStim_length-data.stim_length)*1000,actualStim_length, data.stim_length)
+        if abs(actualStim_length-data.stim_length) > 0.1
+            disp(['/////////////// WARNING Stim length is wrong by ' num2str(actualStim_length-data.stim_length, '%1.2f') 's //////////////'])
+        end
+        Screen('FillRect',w, uint8(data.inter_stim_level),rect);
+        Screen('Flip', w);
+        
+        Priority(0);
+    end
+
+    function TriggerDetected()
+        elapsedTime = toc(lastTrigger);
+        
+        if elapsedTime < 0.15
+            bpunish = 0;
+        else % detected TTL in more than 200ms that means punishment
+            bpunish = 1;
+        end
+    end
+
+
+end

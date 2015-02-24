@@ -1,0 +1,313 @@
+function [x, y] = PlotSection(obj, action, x, y)
+
+GetSoloFunctionArgs;
+
+switch action,
+    case 'init',
+               
+        Conc1 = '95/5';
+        Conc2 = '80/20';
+        Conc3 = '60/40';
+        Conc4 = '53/47';
+        Mix2Conc1 = 'Mix2 - 95/5';
+        
+%         gcf;
+        SoloParamHandle(obj, 'myfig', 'value', figure, 'saveable', 0);
+        name = 'Plot Section'; 
+        set(value(myfig), 'Name', name, 'Tag', name, ...
+              'closerequestfcn', 'dispatcher(''close_protocol'')', 'MenuBar', 'none');
+        set(value(myfig), 'Position', [20   50   1500   980], 'Visible', 'on');
+        x = 1; y = 1;
+        
+             
+       
+        
+        % -------------------- OSTPlot -----------------------------
+        SoloParamHandle(obj,'OSTPlot', 'saveable', 0, 'value', axes('Position', [0.04 0.22 0.25 0.25]));
+        set(value(OSTOdor1Plot),'xlim',[-7 0],'ylim', [-0.05 1]); hold on
+        ylabel('OST (s)')
+        xlabel('Stimulus Type')
+        set(gca,'XTickLabel',{' ', Conc4, Conc3, Conc2, Conc1, ' ', Mix2Conc1, ' '})
+        
+      
+        
+        % -------------------- MTPlot -----------------------------
+        SoloParamHandle(obj,'MTPlot', 'saveable', 0, 'value', axes('Position', [0.04 0.44 0.25 0.25]));
+        set(value(MTOdor1Plot),'xlim',[-7 0],'ylim', [-0.05 1]); hold on
+        ylabel('MT (s)')
+%         xlabel('Stimulus Type')
+        set(gca,'XTickLabel',{' ', Conc4, Conc3, Conc2, Conc1, ' ',Mix2Conc1,' '})
+%         title('Odor 1')
+
+        % -------------------- RWDPlot -----------------------------
+        SoloParamHandle(obj,'RWDPlot', 'saveable', 0, 'value', axes('Position', [0.04 0.66 0.20 0.25]));
+        set(value(MTOdor1Plot),'xlim',[-7 0],'ylim', [-0.05 14]); hold on
+        ylabel('MT (s)')
+%         xlabel('Stimulus Type')
+        set(gca,'XTickLabel',{' ', Conc4, Conc3, Conc2, Conc1, ' ', Mix2Conc1,' ' })
+%         title('Odor 1')
+        
+                    
+             
+        %%% OST Plot %%%
+        SoloParamHandle(obj,'OSTCorrectPlot','value',plot(value(OSTPlot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','g',...
+                        'MarkerFaceColor','g')); hold on
+       
+        SoloParamHandle(obj,'OSTErrorPlot','value',plot(value(OSTPlot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','r',...
+                        'MarkerFaceColor','r')); hold on
+       
+                    
+                    
+        %%% MT Plot %%%
+        SoloParamHandle(obj,'MTCorrectPlot','value',plot(value(MTPlot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','g',...
+                        'MarkerFaceColor','g')); hold on
+                    
+        SoloParamHandle(obj,'MTErrorPlot','value',plot(value(MTPlot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','r',...
+                        'MarkerFaceColor','r')); hold on
+                    
+        %%% RWD Plot %%%
+        SoloParamHandle(obj,'RWDCorrectPlot','value',plot(value(RWDPlot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','g',...
+                        'MarkerFaceColor','g')); hold on
+                    
+        SoloParamHandle(obj,'RWDErrorPlot','value',plot(value(RWDPlot),-1,-1, ...
+                        'LineStyle','none','MarkerSize',5,'Marker','.','Color','r',...
+                        'MarkerFaceColor','r')); hold on
+      %%% VARIABLES TO PLOT                                                
+                    
+                    SoloParamHandle(obj, 'OSTCorrectVector');
+                    OSTCorrectVector.value= NaN(1,1000);
+
+                    SoloParamHandle(obj, 'OSTErrorVector');
+                    OSTErrorVector.value= NaN(1,1000);
+
+                    SoloParamHandle(obj, 'MTCorrectVector');
+                    MTCorrectVector.value= NaN(1,1000);
+
+                    SoloParamHandle(obj, 'MTErrorVector');
+                    MTErrorVector.value= NaN(1,1000);
+
+                    SoloParamHandle(obj, 'RWDCorrectVector');
+                    RWDCorrectVector.value= NaN(1,1000);
+                    
+                    SoloParamHandle(obj, 'RWDErrorVector');
+                    RWDErrorVector.value= NaN(1,1000);
+
+                    
+                    
+                    SoloParamHandle(obj, 'CurrentStim');
+                    CurrentStim.value= NaN(1,1000);
+     %%%
+     
+     %%% VARIABLES TO USE FOR CALCULATIONS
+     
+%--- OST
+ 
+SoloParamHandle(obj, 'OdorValveOn');
+OdorValveOn.value= NaN(1,1000);
+     
+SoloParamHandle(obj, 'ValidPokeOut');
+ValidPokeOut.value= NaN(1,1000); 
+
+SoloParamHandle(obj, 'OSTVector');
+OSTVector.value= NaN(1,1000); 
+     
+%--- 
+
+  
+%--- RWD
+
+SoloParamHandle(obj, 'RWDPokeIn');
+RWDPokeIn.value= NaN(1,1000);
+
+SoloParamHandle(obj, 'RWDPokeOut');
+RWDPokeOut.value= NaN(1,1000);
+
+SoloParamHandle(obj, 'RWDVector');
+RWDVector.value= NaN(1,1000);
+
+%---
+
+%--- MT
+
+SoloParamHandle(obj, 'MTVector');
+MTVector.value= NaN(1,1000);
+
+%---
+
+%%%
+                    
+        
+        
+    case 'startPlot'
+       
+    
+        
+        
+    case 'next_trial'
+        
+        %%%CALCULATIONS%%%
+        
+           if n_done_trials >= 1,
+
+               
+                      %%% TIMES CALCULATIONS 
+           
+       %--- OST
+       
+if (~isempty (parsed_events.states.wait_4_rwd_poke) == 1)
+            
+OdorValveOn(1, n_done_trials) = (parsed_events.states.odor_valve_on(1));  
+ValidPokeOut(1, n_done_trials) = (parsed_events.states.wait_4_rwd_poke(1));
+            
+OSTVector(1, n_done_trials) = ...
+value(ValidPokeOut(1, n_done_trials)) - value(OdorValveOn(1, n_done_trials));
+
+end
+       %---
+            
+       %--- RWD
+
+
+    if ~isempty ((parsed_events.states.correct_left_poke_in_1))  
+RWDPokeIn(1,n_done_trials) = (parsed_events.states.correct_left_poke_in_1(1));
+    elseif ~isempty ((parsed_events.states.correct_right_poke_in_1))
+RWDPokeIn(1,n_done_trials) = (parsed_events.states.correct_right_poke_in_1(1));  
+    elseif ~isempty ((parsed_events.states.error_left_poke_in_1))  
+RWDPokeIn (1,n_done_trials) = (parsed_events.states.error_left_poke_in_1(1));
+    elseif ~isempty ((parsed_events.states.error_right_poke_in_1))
+RWDPokeIn (1,n_done_trials) = (parsed_events.states.error_right_poke_in_1(1));    
+    end
+
+%--
+
+    if ~isempty ((parsed_events.states.correct_left_poke_out))  
+RWDPokeOut (1,n_done_trials) = (parsed_events.states.correct_left_poke_out(1));
+    elseif ~isempty ((parsed_events.states.correct_left_waiting_miss))
+RWDPokeOut (1,n_done_trials) = (parsed_events.states.correct_left_waiting_miss(1));    
+    elseif ~isempty ((parsed_events.states.correct_right_poke_out))  
+RWDPokeOut (1,n_done_trials) = (parsed_events.states.correct_right_poke_out(1));
+    elseif ~isempty ((parsed_events.states.correct_right_waiting_miss))
+RWDPokeOut (1,n_done_trials) = (parsed_events.states.correct_right_waiting_miss(1));
+
+    elseif ~isempty ((parsed_events.states.error_left_poke_out))  
+RWDPokeOut (1,n_done_trials) = (parsed_events.states.error_left_poke_out(1));
+    elseif ~isempty ((parsed_events.states.error_left_waiting_miss))
+RWDPokeOut (1,n_done_trials) = (parsed_events.states.error_left_waiting_miss(1));    
+    elseif ~isempty ((parsed_events.states.error_right_poke_out))  
+RWDPokeOut (1,n_done_trials) = (parsed_events.states.error_right_poke_out(1));
+    elseif ~isempty ((parsed_events.states.error_right_waiting_miss))
+RWDPokeOut (1,n_done_trials) = (parsed_events.states.error_right_waiting_miss(1));    
+    end
+
+%--
+
+RWDVector(1, n_done_trials) = ...
+value(RWDPokeOut(1, n_done_trials)) - value(RWDPokeIn(1, n_done_trials));
+       
+%---
+    
+
+%--- MT
+
+MTVector(1, n_done_trials) = ...
+value(RWDPokeIn(1, n_done_trials)) - value(ValidPokeOut(1, n_done_trials));
+
+%---
+        %%% Stim (XData)
+        
+        if (value(previous_odor)== 1 || value(previous_odor)== 8)==1
+        CurrentStim.value(1,n_done_trials)= -3;
+        
+        elseif (value(previous_odor)== 2 || value(previous_odor)== 7)==1
+        CurrentStim.value(1,n_done_trials)= -4;        
+        
+        elseif (value(previous_odor)== 3 || value(previous_odor)== 6)==1
+        CurrentStim.value(1,n_done_trials)= -5;        
+        
+        elseif (value(previous_odor)== 4 || value(previous_odor)== 4)==1
+        CurrentStim.value(1,n_done_trials)= -6;        
+        
+       
+        elseif (value(previous_odor)== 9 || value(previous_odor)== 16)==1
+        CurrentStim.value(1,n_done_trials)= -1;        
+        
+       
+        end
+
+             
+    
+       %---
+       %%% CORRECT (YDATA)       
+               
+       if  (~isempty ((parsed_events.states.correct_left_poke_in_1))||...
+               ~isempty ((parsed_events.states.correct_right_poke_in_1)))==1
+             
+             OSTCorrectVector(1,n_done_trials)=(value(OSTVector(1,n_done_trials)));
+             MTCorrectVector(1,n_done_trials)=(value(MTVector(1,n_done_trials)));
+           
+       if    (omission_list(1,n_done_trials))==1
+             RWDOmissionVector(1,n_done_trials)=(value(RWDVector(1,n_done_trials)));
+       end
+       
+       end
+       
+              %%% ERROR(YDATA)       
+               
+       if  (~isempty ((parsed_events.states.error_left_poke_in_1))||...
+               ~isempty ((parsed_events.states.error_right_poke_in_1)))==1
+             
+             OSTErrorVector(1,n_done_trials)=(value(OSTVector(1,n_done_trials)));
+             MTErrorVector(1,n_done_trials)=(value(MTVector(1,n_done_trials)));
+           
+       
+             RWDErrorVector(1,n_done_trials)=(value(RWDVector(1,n_done_trials)));
+              
+       end
+       
+       
+        %%%------------%%%
+        
+        if n_done_trials < 1
+            %%% OST plot
+            set(value(OSTCorrectPlot),'XData',0,'YData',0);
+            set(value(OSTErrorPlot),'XData',0,'YData',0);
+            
+            %%% MT plot
+            set(value(MTCorrectPlot),'XData',0,'YData',0);
+            set(value(MTErrorPlot),'XData',0,'YData',0);
+            
+             %%% RWD plot
+            set(value(RWDCorrectPlot),'XData',0,'YData',0);
+            set(value(RWDErrorPlot),'XData',0,'YData',0);
+            
+        else
+            %%% OST plot
+            set(value(OSTCorrectPlot),'XData',value(currentStim(1,1:n_done_trials)), ...
+                'YData',value(OSTCorrectVector(1,1:n_done_trials)));
+            
+            set(value(OSTErrorPlot),'XData',value(currentStim(1,1:n_done_trials)), ...
+                'YData',value(OSTErrorVector(1,1:n_done_trials)));
+            
+            %%% MT plot
+            set(value(MTCorrectPlot),'XData',value(currentStim(1,1:n_done_trials)), ...
+                'YData',value(MTCorrectVector(1,1:n_done_trials)));
+            
+            set(value(MTErrorPlot),'XData',value(currentStim(1,1:n_done_trials)), ...
+                'YData',value(MTErrorVector(1,1:n_done_trials)));
+            
+            %%% RWD plot
+            set(value(RWDCorrectPlot),'XData',value(currentStim(1,1:n_done_trials)), ...
+                'YData',value(RWDOmissionVector(1,1:n_done_trials)));
+            
+            set(value(RWDErrorPlot),'XData',value(currentStim(1,1:n_done_trials)), ...
+                'YData',value(RWDErrorVector(1,1:n_done_trials)));           
+        end
+        
+
+end
+end;

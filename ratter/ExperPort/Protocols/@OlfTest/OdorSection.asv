@@ -1,0 +1,119 @@
+% Typical section code-- this file may be used as a template to be added
+% on to. The code below stores the current figure and initial position when
+% the action is 'init'; and, upon 'reinit', deletes all SoloParamHandles
+% belonging to this section, then calls 'init' at the proper GUI position
+% again.
+
+
+% [x, y] = YOUR_SECTION_NAME(obj, action, x, y)
+%
+% Section that takes care of YOUR HELP DESCRIPTION
+%
+% PARAMETERS:
+% -----------
+%
+% obj      Default object argument.
+%
+% action   One of:
+%            'init'      To initialise the section and set up the GUI
+%                        for it
+%
+%            'reinit'    Delete all of this section's GUIs and data,
+%                        and reinit, at the same position on the same
+%                        figure as the original section GUI was placed.
+%
+% x, y     Relevant to action = 'init'; they indicate the initial
+%          position to place the GUI at, in the current figure window
+%
+% RETURNS:
+% --------
+%
+% [x, y]   When action == 'init', returns x and y, pixel positions on
+%          the current figure, updated after placing of this section's GUI.
+%
+%
+
+
+function [x, y] = OdorSection(obj, action, x, y)
+   
+GetSoloFunctionArgs;
+
+
+switch action
+
+    case 'init',
+        gcf; %main figure of olfprotocol
+        
+%         PushbuttonParam(obj, 'SetOdor', x, y, 'label','Set odor', ...
+%         'position', [x y 200 25], 'BackgroundColor', [0.75 0.75 0.80]); next_row(y,1);
+%         set_callback(SetOdorConcVector, {'OdorSection', 'setOdor'}); %next_row(y,1);
+        MenuParam(obj, 'BankName', {'OlfBankA', 'OlfBankB', 'OlfBankF', 'OlfBank4'}, ...
+            'Bank1', x, y, 'label','Bank name'); next_row(y,1.5);
+        
+        MenuParam(obj, 'valveNumber', {'0', '1', '2', '3', '4', '5', '6', '7'}, ...
+            '0', x, y, 'label','Valve number'); next_row(y,1.5);
+        
+%         set_callback(OdorName, {'OdorSection', 'set'});
+       
+%         NumeditParam(obj, 'OlfCueDuration', 1, x, y, 'label','OdorTmax',...
+%             'labelpos', 'left','labelfraction',0.50,...
+%             'TooltipString',' max olf cue duration [sec]'); next_row(y,1.5);
+%         set_callback(OlfCueDuration, {'OdorSection', 'set'});
+        
+        SoloParamHandle(obj, 'OlfBank');
+        
+        SubHeaderParam(obj, 'OdorSection', 'Odor Section', x, y);
+        
+%         SoloFunctionAddVars('StateMatrixSection', 'rw_args', {'OlfCueDuration'});
+        
+        SoloFunctionAddVars('StateMatrixSection', 'rw_args', {'valveNumber', 'OlfBank'});  
+
+%     case 'setOdor'
+        switch value(BankName)      
+                   case {'Bank1'}
+                       OlfBank.value = 'OlfBankA';
+                   case {'Bank2'}
+                       OlfBank.value = 'OlfBankB';
+                   case {'Bank3'}
+                       OlfBank.value = 'OlfBankF';
+                   case {'Bank4'}
+                       OlfBank.value = 'OlfBankD';
+        end
+        
+            
+
+%     case 'set'
+%         OdorName.value = value(OdorName);
+%         OlfCueDuration.value = value(OlfCueDuration);        
+        
+    case 'next_trial',
+%     case 'set'
+%         OdorName.value = value(OdorName);
+%         OlfCueDuration.value = value(OlfCueDuration);
+%         switch value(BankName)      
+%                    case {'Bank1'}
+%                        OlfBank.value = 'OlfBankA';
+%                    case {'Bank2'}
+%                        OlfBank.value = 'OlfBankB';
+%                    case {'Bank3'}
+%                        OlfBank.value = 'OlfBankF';
+%                    case {'Bank4'}
+%                        OlfBank.value = 'OlfBankD';
+%         end
+%         
+       
+%   ------------------------------------------------------------------
+%                CLOSE
+%   ------------------------------------------------------------------    
+  case 'close'    
+    % Delete all SoloParamHandles who belong to this object and whose
+    % fullname starts with the name of this mfile:
+    
+    if exist('myfig', 'var') && isa(myfig, 'SoloParamHandle') && ishandle(value(myfig)),
+      delete(value(myfig));
+    end;    
+    delete_sphandle('owner', ['^@' class(obj) '$'], 'fullname', ['^' mfilename '_']);
+
+    
+
+end;
