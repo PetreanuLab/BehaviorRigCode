@@ -35,10 +35,18 @@ switch action
             ITIValue = value(ITIMax);
         end
         
+        pre_response_window_duration = 0.1; % time after the stimlus change when response is still considered invalid (accident)
         validTrial = value(currValidTrial);
         stim_length = value(currStimDuration);
-        responseWindow = value(currResponseWindow);
+        responseWindow = value(currResponseWindow)-pre_response_window_duration;
+        
+        earlyLickGracePeriod = value(earlyLickGP);      
         changeStimDelay = value(currChangeStimDelay);
+        punishEarlyLicksWindow  =changeStimDelay - earlyLickGracePeriod;
+        if punishEarlyLicksWindow <0
+            error('changeStimDelay must be longer than earlyLickGracePeriod')
+        end
+        
         trial_length = stim_length + value(preCue); + value(cueDuration) + value(stimDelay);
         
         %%
@@ -219,7 +227,7 @@ switch action
             % DUMMY STATE
             sma = add_state(sma, 'name', 'cueInvalid','self_timer', 0.001,'input_to_statechange', {'Tup', 'stimulus_delay'});
             
-        else 
+        else
             sma = add_state(sma, 'name', 'cue','self_timer', 0.001,...
                 'output_actions', {'SchedWaveTrig','stimulus_trigger'},...
                 'input_to_statechange', {'Tup', 'cueInvalid'});
@@ -227,34 +235,49 @@ switch action
                 'input_to_statechange', {'Tup', 'stimulus_delay'});
         end
         
+        sma = add_state(sma, 'name', 'stimulus_delay','self_timer', value(stimDelay),...
+            'input_to_statechange', {'Tup', 'stim_onset'});
+        
         % In case we want to force animals to wait before licking
         if value(punishEarlyLick)
-     
-            sma = add_state(sma, 'name', 'stimulus_delay','self_timer', value(stimDelay),...
-                'input_to_statechange', {'Tup', 'stim_onset',lick,'early_choice'});
-            
-            % STIMULUS presentation STARTS
+              % STIMULUS presentation STARTS
             % Presents stimulus, starts trial timer and checks if animals lick during delay
-            sma = add_state(sma, 'name', 'stim_onset','self_timer', changeStimDelay,...
+            sma = add_state(sma, 'name', 'stim_onset','self_timer', earlyLickGracePeriod ,...
+                'input_to_statechange', {'Tup', 'punish_early_licks'});
+            sma = add_state(sma, 'name', 'punish_early_licks','self_timer', punishEarlyLicksWindow ,...
+                'input_to_statechange', {'Tup', 'pre_response_window',lick,'early_choice'});
+            sma = add_state(sma, 'name', 'pre_response_window','self_timer', pre_response_window_duration ,...
                 'input_to_statechange', {'Tup', 'response_window',lick,'early_choice'});
             % In case animals can lick during the delay period
         else
-           
-            sma = add_state(sma, 'name', 'stimulus_delay','self_timer', value(stimDelay),...
-                'input_to_statechange', {'Tup', 'stim_onset'});
-            
+             
             % STIMULUS presentation STARTS
             % Presents stimulus, starts trial timer and waits delay period
             sma = add_state(sma, 'name', 'stim_onset','self_timer', changeStimDelay,...
-                'input_to_statechange', {'Tup', 'response_window'}); %% OPTIONALLY PUNISH HERE
+                'input_to_statechange', {'Tup', 'pre_response_window'}); %% OPTIONALLY PUNISH HERE
+            % this state is because 1) there is some latency between the
+            % visual stimulus PC and 2) there is no way that the mouse can
+            % detect the change in stimulus and respond in less than about
+            % 100ms so it shouldn't get reinforced for accidents
+                      sma = add_state(sma, 'name', 'pre_response_window','self_timer', pre_response_window_duration ,...
+                'input_to_statechange', {'Tup', 'response_window'});
+  
         end
+        
+        
         
         % Response window state ( AFTER CHANGE of Stimlus)
         if validTrial % If current trial is is attended
-            sma = add_state(sma, 'name', 'response_window','self_timer', responseWindow,...
-                'input_to_statechange', {lick,'correct_valid','Tup', 'missed_response'});
-            % Checks animal licks and rewards, punishes or goes to time out
-            % In case we are not punishing animals for mistakes
+            % Give free water after change... Training state
+            if value(freeWaterAtChange)
+                sma = add_state(sma, 'name', 'response_window','self_timer', 0.01,...
+                    'input_to_statechange', {'Tup','correct_valid'});
+            else
+                sma = add_state(sma, 'name', 'response_window','self_timer', responseWindow,...
+                    'input_to_statechange', {lick,'correct_valid','Tup', 'missed_response'});
+                % Checks animal licks and rewards, punishes or goes to time out
+                % In case we are not punishing animals for mistakes
+            end
         else
             if  value(rewardWitholding)                 % In case we reward the animals for WITHOLDING
                 sma = add_state(sma, 'name', 'response_window','self_timer', responseWindow,...

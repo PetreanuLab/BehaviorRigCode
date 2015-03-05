@@ -31,10 +31,11 @@ switch action
         ToggleParam(obj, 'rewardWitholding', 0, x, y); next_row(y);
         ToggleParam(obj, 'resetITI', 0, x, y); next_row(y);
         ToggleParam(obj, 'punishError', 0, x, y); next_row(y);
+        ToggleParam(obj, 'freeWaterAtChange', 0, x, y); next_row(y);
         ToggleParam(obj, 'visualError', 0, x, y); next_row(y);       
         %SubheaderParam(obj, 'trialHeader', 'Trial Settings', x, y); next_row(y,1.5);
         DeclareGlobals(obj, 'rw_args', {'punishError','rewardWitholding','resetITI',...
-            'punishEarlyLick','stopLick','treadmillStim','visualError'});
+            'punishEarlyLick','stopLick','treadmillStim','visualError','freeWaterAtChange'});
         
         
     %% CASE show

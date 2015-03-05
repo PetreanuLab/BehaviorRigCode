@@ -35,7 +35,7 @@ switch action
         NumeditParam(obj, 'dotSpeedProb', [0 0 1 0 0], x, y, 'TooltipString', 'Array with speed probabilities');next_row(y);
 
         NumeditParam(obj, 'dotSize', [0.1 0.5 1 2 3], x, y, 'TooltipString', 'Array with available sizes');next_row(y);
-        NumeditParam(obj, 'dotSizeProb', [0 0 0 1 0], x, y, 'TooltipString', 'Array with size probabilities');next_row(y);
+        NumeditParam(obj, 'dotSizeProb', [0 0 0 0 1], x, y, 'TooltipString', 'Array with size probabilities');next_row(y);
 
         NumeditParam(obj, 'dotLifeTime', [120 60 40 24 12], x, y, 'TooltipString', 'Array with available life times');next_row(y);
         NumeditParam(obj, 'dotLifeTimeProb', [1 0 0 0 0], x, y, 'TooltipString', 'Array with life time probabilities');next_row(y);

@@ -24,18 +24,17 @@ switch action
         x=10; y=10;
         
         % ----------------------  sound Parameters -----------------------
-        NumeditParam(obj, 'soundInvalidVolume', [10 8 6 4 2], x, y, 'TooltipString', 'sound volume during Stimulus during invalid trials');next_row(y);
-        NumeditParam(obj, 'soundInvalidVolumeProb', [1 0 0 0 0], x, y, 'TooltipString', 'volume probabilities');next_row(y);
-
-        ToggleParam(obj, 'soundSides', 0, x, y); next_row(y);
-        MenuParam(obj, 'cue1Frequency', {'2','4','6','8','10','12'},4, x, y, 'TooltipString', 'Sound frequency paired with right direction in kHz.');next_row(y);
-        MenuParam(obj, 'cue2Frequency', {'2','4','6','8','10','12'},2, x, y, 'TooltipString', 'Sound frequency paired with left direction in kHz.');next_row(y);
+        NumeditParam(obj, 'soundInvalidVolume', [10 8 6 4 2], x, y, 'TooltipString', 'UNUSED sound volume during Stimulus during invalid trials');next_row(y);
+        NumeditParam(obj, 'soundInvalidVolumeProb', [1 0 0 0 0], x, y, 'TooltipString', 'UNUSED volume probabilities');next_row(y);
+        MenuParam(obj, 'cue1Frequency', {'2','4','7','8','10','12'},12, x, y, 'TooltipString', 'Sound frequency paired with right direction in kHz.');next_row(y);
+        MenuParam(obj, 'cue2Frequency', {'2','4','7','8','10','12'},7, x, y, 'TooltipString', 'Sound frequency paired with left direction in kHz.');next_row(y);
+        SliderParam(obj, 'errorSoundVolume', 3, 0,10, x, y, 'TooltipString', 'Error sound volume');next_row(y)
         SliderParam(obj, 'soundVolume', 5, 0, 10, x, y, 'TooltipString', 'Sound volume');next_row(y);
         ToggleParam(obj, 'soundTrial', 1, x, y); next_row(y);
         %SubheaderParam(obj, 'soundHeader', 'Sound Parameters', x, y); next_row(y,1.5);
         
         DeclareGlobals(obj, 'rw_args', {'cue1Frequency', 'cue2Frequency',...
-            'soundSides','soundInvalidVolume','soundInvalidVolumeProb'...
+            'soundInvalidVolume','soundInvalidVolumeProb','errorSoundVolume'...
             'soundTrial','soundVolume'});
         
         

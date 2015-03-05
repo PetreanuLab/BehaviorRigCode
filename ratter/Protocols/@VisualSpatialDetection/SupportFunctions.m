@@ -20,18 +20,14 @@ switch action,
             earlyHistory(n_done_trials) = 0;
             missedHistory(n_done_trials) = 0;
 %             parsed_events.states
-            if ~isempty(parsed_events.states.wrong_choice) &&...
-                    isempty(parsed_events.states.early_choice)
+            if ~isempty(parsed_events.states.wrong_choice) 
                 correctHistory(n_done_trials) = 0;
                 if value(currValidLoc)==2
                     correctHistoryLoc2(n_done_trials) = 0;
                 else
                     correctHistoryLoc1(n_done_trials) = 0;
                 end
-            elseif ~isempty(parsed_events.states.early_choice)
-                earlyHistory(n_done_trials) = 1;
-            elseif ~isempty(parsed_events.states.missed_response)
-                missedHistory(n_done_trials) = 1;
+            
             elseif  ~isempty(parsed_events.states.correct_valid)|| ...
                     ~isempty(parsed_events.states.correct_invalid)
                 correctHistory(n_done_trials) = 1;
@@ -40,6 +36,13 @@ switch action,
                 else
                     correctHistoryLoc1(n_done_trials) = 1;
                 end
+            end
+            
+            if ~isempty(parsed_events.states.early_choice)
+                earlyHistory(n_done_trials) = 1;
+            end
+            if ~isempty(parsed_events.states.missed_response)
+                missedHistory(n_done_trials) = 1;
             end
         end
     case 'set_next_stimulusChange'
@@ -82,10 +85,13 @@ switch action,
         validTrial = value(currValidTrial);
         
         % % Set change delay
-        if value(randomChangeDelay)
-            changeStimDelay = value(minChgDelay) + rand*(stim_length-value(minChgDelay)-value(respWindow));  % time fromt the begining of the stimulus to the change
-        else
-            changeStimDelay = value(minChgDelay);
+        switch value(randomChangeDelay)
+            case 'random'
+                changeStimDelay = value(minChgDelay) + rand*(stim_length-value(minChgDelay)-value(respWindow));  % time fromt the begining of the stimulus to the change
+            case 'random with max'
+                changeStimDelay = value(minChgDelay) + rand*(stim_length-value(minChgDelay)-value(respWindow)) * (value(maxChgDelay)- value(minChgDelay));  % time fromt the begining of the stimulus to the change                
+            case 'fixed'
+                changeStimDelay = value(minChgDelay);
         end
         
         % % Sets the responseWindow
@@ -181,7 +187,7 @@ switch action,
             validPerf.value  =  nanmean(correctHistory(indmean(indValid)));
             invalidPerf.value=  nanmean(correctHistory(indmean(indInValid)));
             missFrac.value=  nansum(missedHistory(indmean))/meanSize;
-            
+            earlyFrac.value=  nansum(earlyHistory(indmean))/meanSize;
 
             performanceLoc1.value =  nanmean( correctHistoryLoc1(indmean));
             performanceLoc2.value = nanmean( correctHistoryLoc2(indmean));
@@ -286,6 +292,7 @@ switch action,
         param.error_length      = value(errorVisualLength);
         param.error_lifetime    = value(flickeringError);
         param.error_sound_length = value(errorSoundLength);
+        param.error_sound_volume = value(errorSoundVolume);
         param.reward_sound_length = value(rewardSoundLength);
         param.sound_volume      = value(soundVolume);
         
@@ -293,8 +300,7 @@ switch action,
         param.trial_sounds      = value(soundTrial);
         param.after_lick        = value(outDelay);
         param.stop_stimulus     = value(stopLick);
-        param.visual_error      = value(visualError);
-        param.sound_sides       = value(soundSides);
+        param.visual_error      = value(visualError);     
         
         save(fullfile(r.DIR.ratter, 'next_trial'),'param');
         

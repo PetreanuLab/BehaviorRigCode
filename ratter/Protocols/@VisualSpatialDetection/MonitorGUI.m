@@ -25,8 +25,8 @@ switch action
         
         % ----------------------  Timing Parameters -----------------------
         NumeditParam(obj, 'screenPx', [1920, 1080], x, y, 'TooltipString', '');next_row(y);
-        NumeditParam(obj, 'diagIn', 22, x, y, 'TooltipString', '');next_row(y);
-        NumeditParam(obj, 'distCm', 25, x, y, 'TooltipString', '');next_row(y);
+        NumeditParam(obj, 'diagIn', 24, x, y, 'TooltipString', '');next_row(y);
+        NumeditParam(obj, 'distCm', 12, x, y, 'TooltipString', '');next_row(y);
         %SubheaderParam(obj, 'monitorHeader', 'Monitor Settings', x, y); next_row(y,1.5);
         
         DeclareGlobals(obj, 'rw_args', {'screenPx', 'diagIn','distCm'});

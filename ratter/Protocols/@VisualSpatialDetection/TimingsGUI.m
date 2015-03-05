@@ -17,7 +17,7 @@ switch action
         SoloParamHandle(obj, 'timings_fig', 'saveable', 0); timings_fig.value = figure;
         name = 'Timing Settings';
         set(value(timings_fig), 'Name', name, 'Tag', name, ...
-            'Position', [  1112         269        215         457], 'Visible', 'off',...
+            'Position', [  1112         269        215         497], 'Visible', 'off',...
             'MenuBar', 'none',    'NumberTitle', 'off',...
             'closerequestfcn', ['TimingsGUI(' class(obj) ',''hide'')']);
         x=10; y=10;
@@ -30,18 +30,20 @@ switch action
         SliderParam(obj, 'errorTimeOut', 5,0,20, x, y, 'TooltipString', 'Duration of the error punishment state.');next_row(y);
         
         SliderParam(obj, 'outDelay', 0.1,0,10, x, y, 'TooltipString', 'Outcome delay after lick.');next_row(y);
-        ToggleParam(obj, 'setRespWindow', 1, x, y, 'OnString', 'Resp Window', ...
+        ToggleParam(obj, 'setRespWindow', 0, x, y, 'OnString', 'Resp Window', ...
             'OffString', 'Rest of stimulus'); next_row(y);
         SliderParam(obj, 'respWindow', 1,0,10, x, y, 'TooltipString', 'Duration of response window.');next_row(y);
-        SliderParam(obj, 'minChgDelay', 0.5, 0,10, x, y, 'TooltipString', 'Minimum Delay after Stimulus before CHANGE.');next_row(y);
-        ToggleParam(obj, 'randomChangeDelay', 0, x, y, 'OnString', 'randomize Change Time', ...
-            'OffString', 'Use minChgDelay' , 'TooltipString', '...');        next_row(y,1.5);
+        SliderParam(obj, 'minChgDelay', 2, 0,10, x, y, 'TooltipString', 'Minimum Delay after Stimulus before CHANGE.');next_row(y);
+        SliderParam(obj, 'maxChgDelay', 3, 0,10, x, y, 'TooltipString', 'max Delay after Stimulus before CHANGE used when random with max is chosen.');next_row(y);
+        MenuParam(obj, 'randomChangeDelay', {'fixed', 'random',  'random with max'},'random with max', x, y, 'TooltipString', 'Delay after Stimulus before CHANGE ');next_row(y);
         SliderParam(obj, 'maxStimLgth', 5, 0,10, x, y, 'TooltipString', 'Max stim length.');next_row(y);
         SliderParam(obj, 'meanStimLgth', 2, 0,10, x, y, 'TooltipString', 'Mean stim length.');next_row(y);
         MenuParam(obj, 'stimDist', {'exponential', 'uniform','fixed'},'fixed', x, y, 'TooltipString', 'Distribution of stimulus lengths');next_row(y);
+
         
-        SliderParam(obj, 'stimDelay', 0.3, 0,10, x, y, 'TooltipString', 'Delay after CUE before Stimulus.');next_row(y);
-        SliderParam(obj, 'cueDuration', 0.3, 0,10, x, y, 'TooltipString', 'Length of visual/auditory Cue.');next_row(y);
+         SliderParam(obj, 'earlyLickGP', 0.5, 0,3, x, y, 'TooltipString', 'time when early licks are forgiven. must be smaller than minChgDelay');next_row(y);
+       SliderParam(obj, 'stimDelay', 0, 0,10, x, y, 'TooltipString', 'Delay after CUE before Stimulus.');next_row(y);
+        SliderParam(obj, 'cueDuration', 0.5, 0,10, x, y, 'TooltipString', 'Length of visual/auditory Cue.');next_row(y);
         SliderParam(obj, 'preCue', 0.1,0,5, x, y, 'TooltipString', 'Length in seconds  before Cue presentation.');next_row(y);
         
         SubheaderParam(obj, 'timingsHeader', 'Trial timings', x, y); next_row(y,1.5);
@@ -56,8 +58,8 @@ switch action
         DeclareGlobals(obj, 'rw_args', {'ITIMax', 'ITIMin','ITI',...
             'errorTimeOut','outDelay','setRespWindow',...
             'stimDist','maxStimLgth','meanStimLgth',...
-            'respWindow','preCue','cueDuration','stimDelay','minChgDelay','randomChangeDelay',...
-            'valveTime','rewardSoundLength','errorSoundLength','errorVisualLength'});
+            'respWindow','preCue','cueDuration','stimDelay','minChgDelay','maxChgDelay','randomChangeDelay',...
+            'valveTime','rewardSoundLength','errorSoundLength','errorVisualLength','earlyLickGP'});
         
         
         %% CASE show

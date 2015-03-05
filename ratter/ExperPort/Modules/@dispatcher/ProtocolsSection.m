@@ -61,6 +61,9 @@ switch action,
       end;
     end;
     
+    if isempty(prot_names)
+        error('empty protocol list... Check settings_custom.conf has the correct directory for Protocols'); % added BA
+    end
     [prot_list{1:length(prot_names)}]= deal(prot_names.name);
     % remove @ head:
     for i=1:length(prot_list), prot_list{i} = prot_list{i}(2:end); end;
