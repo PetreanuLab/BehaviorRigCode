@@ -147,6 +147,7 @@ hCtr.start();
         for iLoc = 1:3 % NOTE iLoc 1 is always the valid location, iLoc 3 is the changed stimulus
             % Dots speed
             dotSpeedPerFrame = data.stimulus(iLoc).dot_speed_px/frameRate;
+            stimulus(iLoc).lumlevel = data.stimulus(iLoc).lumlevel;
             
             % Initiates the dots' centres
             stimulus(iLoc).dotCentrePolar = [rand(s1,1,data.stimulus(iLoc).dot_number)*2*pi-pi;...
@@ -311,7 +312,7 @@ hCtr.start();
                     % Converts dots positions to cartisian coordinates
                     for iLoc = 1:2
                         stimulus(iLoc).dotCentre = [cos(stimulus(iLoc).dotCentrePolar(1,:)).*stimulus(iLoc).dotCentrePolar(2,:); sin(stimulus(iLoc).dotCentrePolar(1,:)).*stimulus(iLoc).dotCentrePolar(2,:)];
-                        Screen('DrawDots', w, stimulus(iLoc).dotCentre, data.stimulus(iLoc).dot_size_px, uint8(data.stimulus(iLoc).lumlevel), data.stimulus(iLoc).centre_px,1);
+                        Screen('DrawDots', w, stimulus(iLoc).dotCentre, data.stimulus(iLoc).dot_size_px, uint8(stimulus(iLoc).lumlevel), data.stimulus(iLoc).centre_px,1);
                     end
                     Screen('DrawingFinished', w); % Tell PTB that no further drawing commands will follow before Screen('Flip')
                     vbl(end+1) = Screen('Flip', w,  vbl(end)+0.5*1/frameRate);
@@ -320,6 +321,7 @@ hCtr.start();
                     if ~bchangedStim && ...
                             GetSecs() >= (stimulusOnsetTime+data.changeStimDelay -(1/frameRate))
                         stimulus(iLocChange).dotDirection =  stimulus(3).dotDirection;
+                        stimulus(iLocChange).lumlevel = stimulus(3).lumlevel;
                         bchangedStim =1;
                     end % OPTIONALLY ADD INVALID SOUND HERE
                     
