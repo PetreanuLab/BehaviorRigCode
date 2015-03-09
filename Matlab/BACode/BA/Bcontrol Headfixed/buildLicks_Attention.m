@@ -4,8 +4,9 @@ function licks = buildLicks_Attention(dp)
 
 if nargin==0
     dp = loadBControlsession;
+elseif nargin==1 & ~isstruct(dp)
+    dp = loadBControlsession(dp);
 end
-
 rd = visRigDefs();
 licks.info.spikesfile  =   fullfile(rd.DIR.BStruct,[dp.FileName '_LickStruct']);
 licks.dataDesc = 'licks';
@@ -15,6 +16,7 @@ sweeps.TrialAvailEphys = sweeps.TrialAvail;
 sweeps.nTrialsAvailEphysAndBehavior = sweeps.ntrials;
 sweeps.nTrialsAvailEphys = sweeps.ntrials;
 sweeps.firstLickAfterStimulusChange = nan(size(sweeps.TrialInit));
+sweeps.firstLickAfterStimulusOn= nan(size(sweeps.TrialInit));
 sweeps.nLicks =zeros(size(sweeps.TrialInit));
 sweeps.nLicksBeforeStimulusChange =zeros(size(sweeps.TrialInit));
 
@@ -63,6 +65,12 @@ for itrial   = 1:sweeps.ntrials
         ind = find(delta>0,1,'first');
         if ~isempty(ind)
             sweeps.firstLickAfterStimulusChange (itrial) =thisTrialLicks(ind ,1);
+        end
+        %find first Lick after X
+        delta = thisTrialLicks(:,1) - sweeps.timeStimulusOn(itrial);
+        ind = find(delta>0,1,'first');
+        if ~isempty(ind)
+            sweeps.firstLickAfterStimulusOn (itrial) =thisTrialLicks(ind ,1);
         end
         
           

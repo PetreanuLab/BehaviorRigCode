@@ -87,17 +87,24 @@ varargout{2} = dstruct.figure.hf;
         y = nan(1,dp.ntrials);
         y(indCorrectValid) = dp.firstLickAfterStimulusChange(indCorrectValid)- dp.timeStimulusChange(indCorrectValid) ;
         dp.movingAvg.timeToCorrectfirstLick = nanconv(y,kernel,'edge','1d') ;
-        dp.movingAvg.timeToCorrectfirstLick = dp.movingAvg.timeToCorrectfirstLick/max(dp.movingAvg.timeToCorrectfirstLick)
-        %% plotting moving average accross session
+        dp.movingAvg.timeToCorrectfirstLick = dp.movingAvg.timeToCorrectfirstLick/max(dp.movingAvg.timeToCorrectfirstLick);
+        % time of first lick after stimOn
+        y = dp.firstLickAfterStimulusOn - dp.timeStimulusOn ;
+        
+        dp.movingAvg.timeTofirstLickStimulusOn = nanconv(y,kernel,'edge','1d') ;
+        dp.movingAvg.timeTofirstLickStimulusOn = dp.movingAvg.timeTofirstLickStimulusOn/max(dp.movingAvg.timeTofirstLickStimulusOn);
+
+        %% plotting moving average across session
         h.hAx(1) = subplot(nr,nc,1);
         trial = [1:dp.ntrials];
         line(trial,dp.movingAvg.ChoiceCorrect,'color','g','linewidth',2);
         line(trial,dp.movingAvg.ChoiceMissed,'color','k','linewidth',2);
         line(trial,dp.movingAvg.Premature,'color',[0.7 0.7 0.7],'linewidth',2);
         line(trial,dp.movingAvg.timeToCorrectfirstLick,'color','b','linewidth',2);
+        line(trial,dp.movingAvg.timeTofirstLickStimulusOn,'color','c','linewidth',2);
         
         
-        h.leg(1) = legend({'ChoiceCorrect','ChoiceMissed','Premature','Time to First Lick'});
+        h.leg(1) = legend({'ChoiceCorrect','ChoiceMissed','Premature','Time 1st Lick','Time 1st StimOn'});
         axis tight
         ylim([0 1]);
         stitle = sprintf('\t\t Rwd: %d, Vd: %1.2f, Miss: %1.2f, PreM: %1.2f, %1.0f trial/min',numRewardTrials,fracValid,fracMissed,fracPremature,trialRate_nonMissed);
@@ -166,8 +173,8 @@ varargout{2} = dstruct.figure.hf;
         options.nsmooth =round(50/ options.binsize);
         
         options.sDesc = 'Error';
-        options.dpFieldsToPlot = {'firstLickAfterStimulusChange'};
-        options.sortSweepsByARelativeToB= {'firstLickAfterStimulusChange','timeStimulusOn',};
+        options.dpFieldsToPlot = {'firstLickAfterStimulusOn'};
+        options.sortSweepsByARelativeToB= {'firstLickAfterStimulusOn','timeStimulusOn',};
         options.plottype = {'psth','rasterplot'};
         icond = 1;
         cond(icond).sleg = 'Error';
@@ -198,6 +205,7 @@ varargout{2} = dstruct.figure.hf;
         switch(event.Character)
             case 'r'
                 bupdate = 1;
+                dataParsed = fullfile(dstruct.licks.sweeps.PathName, dstruct.licks.sweeps.FileName);
 %             case 'S'
 %                 dp = dstruct.dataParsed;
 %                 performSummary = getPerformance(dp);
@@ -215,7 +223,7 @@ varargout{2} = dstruct.figure.hf;
                 else
                     slash = '\';
                 end
-                [FileName,PathName] = uigetfile(fullfile(directory,slash,'*.txt'),'Select Behavior file to analyze');
+                [FileName,PathName] = uigetfile(fullfile(directory,slash,'data*.mat'),'Select Behavior file to analyze');
                 dataParsed = [PathName FileName];
                 
                 bupdate = 1;
@@ -250,14 +258,14 @@ varargout{2} = dstruct.figure.hf;
         end
         
         if bupdate
-            dstruct.licks = buildLicks_Attention(dp);
+            dstruct.licks = buildLicks_Attention(dataParsed);
             dstruct.dataParsed = dstruct.licks.sweeps;
             clf(dstruct.figure.hf);
             try
                 initFigure(dstruct);
                 
                 if bsave
-                    saveas(dstruct.figure.hf, fullfile(rd.Dir.DailyFig, [name '.pdf']));
+                    saveas(dstruct.figure.hf, fullfile(rd.DIR.DailyFig, [name '.pdf']));
                 end
             catch ME
                 getReport(ME)

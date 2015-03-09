@@ -149,6 +149,7 @@ try
         end
         these_sweeps = addTimeRelativeTo(these_sweeps,options.dpFieldsToPlot,cond(icond).alignEvent,these_sweeps.ephysTimeScalar);
         % get time in Sweep for events to be plotted
+        these_spikes.sweeps = these_sweeps;
         
         tempoptions.syncEventEphys = syncEventEphys;
         tempoptions.syncEvent = syncEvent;
