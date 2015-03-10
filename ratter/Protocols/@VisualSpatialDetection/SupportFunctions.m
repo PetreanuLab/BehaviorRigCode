@@ -106,6 +106,8 @@ switch action,
         % %  stimulus Change   paramters
         currCohChg.value = getprob(cohChg,cohChgProb)  ;     
         currDirnDeltaChg.value = getprob(dirnDeltaChg,dirnDeltaChgProb);
+        currLumChg.value = getprob(lumChg,lumChgProb)  ;     
+        currSpeedChg.value = getprob(speedChg,speedChgProb);
 
         % % set Sounds during Trial if it is Invalid
         if ~value(currValidTrial)
@@ -262,8 +264,8 @@ switch action,
             param.stimulus(1).centre_px = value(stim2Pos); 
             param.stimulus(2).centre_px = value(stim1Pos); 
         end
-
-        % % other stimulus are distractors/Foils
+      
+        
         param.stimulus(2).stim_dir    = param.stimulus(2).stim_dir + value(foilDeltaDirc_Deg);
         param.stimulus(2).lumlevel = value(currLumFoil);
         
@@ -277,6 +279,9 @@ switch action,
         % % stimulus Change  parameters ... stimulus(3)
         param.stimChange_coh =   value(currCohChg);
         param.stimChange_dirn =   value(currDirnDeltaChg);
+        param.stimChange_speed =   value(currSpeedChg);
+        param.stimChange_lum =   value(currLumChg);
+        
         
         if  value(currValidTrial);
             param.stimulus(3) = param.stimulus(1);
@@ -285,7 +290,11 @@ switch action,
         end
         param.stimulus(3).dot_coherence = param.stimChange_coh;
         param.stimulus(3).stim_dir = param.stimChange_dirn;
-        
+        param.stimulus(3).lumlevel =  param.stimChange_lum ;
+        param.stimulus(3).dot_speed_cm = tan(value(param.stimChange_speed)*pi/180)*value(distCm);
+        param.stimulus(3).dot_speed_px = param.diag_px/param.diag_cm*param.stimulus(3).dot_speed_cm;
+        % % other stimulus are distractors/Foils
+
         %% Others
         param. validTrial       =  value(currValidTrial);
         

@@ -35,7 +35,7 @@ switch action
             ITIValue = value(ITIMax);
         end
         
-        pre_response_window_duration = 0.1; % time after the stimlus change when response is still considered invalid (accident)
+        pre_response_window_duration = 0.001; % time after the stimlus change when response is still considered invalid (accident)
         validTrial = value(currValidTrial);
         stim_length = value(currStimDuration);
         responseWindow = value(currResponseWindow)-pre_response_window_duration;
@@ -74,7 +74,7 @@ switch action
         sma = add_scheduled_wave(sma,'name','lick_pulse',...  %  3 TimerOut
             'preamble',0.001,'sustain',0.001,....
             'DOut',toolboxtrig); 
-%         sma = add_scheduled_wave(sma,'name','after_timer',...%  4 delay before outcomes e.g. Visual error and water etc..
+%         sma = add_scheduled_wave(sma,'name','outcomeDelay_timer',...%  4 delay before outcomes e.g. Visual error and water etc..
 %             'preamble',value(outDelay),...
 %             'trigger_on_up', 'stimulus_trigger');
         
@@ -300,16 +300,23 @@ switch action
         end
         % Correct choice state
         % Opens valve, informs toolbox and waits trial duration before going to ITI
-        sma = add_state(sma, 'name', 'correct_valid','self_timer', 0.1,... % to keep stimulus increase the length of this state
-              'output_actions', {'SchedWaveTrig','reward_delivery+correct_lick'},...
+        sma = add_state(sma, 'name', 'correct_valid','self_timer', value(outDelay),... % to keep stimulus increase the length of this state
+            'input_to_statechange', {'Tup', 'reward_state'});
+        
+        sma = add_state(sma, 'name', 'reward_state','self_timer', 0.001,...
+            'output_actions', {'SchedWaveTrig','reward_delivery+correct_lick'},...
             'input_to_statechange', {'Tup', 'pre_iti'});
-       
+        
         % Correct choice state
         % Opens valve, informs toolbox and waits trial duration before going to ITI
-        sma = add_state(sma, 'name', 'correct_invalid','self_timer', 0.1,...
+        sma = add_state(sma, 'name', 'correct_invalid','self_timer', value(outDelay),...
+            'input_to_statechange', {'Tup', 'reward_state_invalid'});
+        
+        sma = add_state(sma, 'name', 'reward_state_invalid','self_timer', 0.001,...
             'output_actions', {'SchedWaveTrig','reward_delivery'},...
             'input_to_statechange', {'Tup', 'pre_iti'});
-       
+        
+
         % Wrong choice state
         if  value(punishError)  % In case we punish the animals for making a mistake
             % Informs toolbox and waits error time-out
