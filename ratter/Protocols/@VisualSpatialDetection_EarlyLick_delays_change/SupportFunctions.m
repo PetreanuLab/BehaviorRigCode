@@ -215,7 +215,7 @@ switch action,
         param.background_level  = value(bckgLum);
         param.inter_stim_level  = value(intStimLum);
         param.rand_seed = value(currRandSeed);
-        
+        param.punishEarlyLickNoise = value(punishEarlyLkNoise);
         % % timing properties
         param.pre_cue           = value(preCue);
         param.cue_length        = value(cueDuration);

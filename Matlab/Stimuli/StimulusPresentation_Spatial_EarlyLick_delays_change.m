@@ -18,6 +18,7 @@ counter=0;
 counterName = 'init';
 audio_freq = 44000;
 bpunish = 0;
+bearlypunish = 0;
 boutCome = 0;
 changeNOW = 0;
 bstopStimulus = 0;
@@ -27,7 +28,7 @@ persistent  data
 persistent w rect frameRate
 persistent stimulus iLocChange bCue
 persistent elapsedTime lastTrigger cueTime
-persistent rewardSound noiseSound cueSound
+persistent rewardSound noiseSound cueSound earlynoiseSound
 persistent s1 s2
 
 close all;
@@ -162,6 +163,8 @@ hCtr.start();
         rewardSound = audioplayer(sin((1:audio_freq*(data.reward_sound_length))/audio_freq*2*pi*1000)*(data.sound_volume),audio_freq);
         
         noiseSound = audioplayer((rand(s2,audio_freq*(data.error_sound_length),1) - 0.5)*(data.error_sound_volume),audio_freq);
+        early_noise_length = 0.3;
+        earlynoiseSound = audioplayer((rand(s2,audio_freq*(early_noise_length),1) - 0.5)*(data.error_sound_volume),audio_freq);
         
         % % Stimulus
         % % Prepare Dots
@@ -266,60 +269,68 @@ hCtr.start();
         % but outcomes Visual stimuli and sound should still occur
         while ~bstopStimulus
             try
-
+                
                 % Trigger has happen While Prese_length)ntStimulus is happening
                 % There will be correct or error events
                 if boutCome
+                    disp('outcome');
                     boutCome = 0; % reset outcome
                     
-                    
-                    if ~bpunish % reward sound
-                        disp('correct lick')
-                        if data.trial_sounds 
-                            play(rewardSound);
+                    if bearlypunish
+                        bearlypunish = 0;                        
+                        if data.punishEarlyLickNoise
+                            disp('play early noise');
+                            play(earlynoiseSound);
                         end
-                        bstopStimulus = 1; % always stop stimulus after an outcome
-                        Screen('FillRect',w, uint8(data.inter_stim_level),rect);
-                        Screen('Flip', w);
-%                         Priority(0);
-%                         disp('stimulus stopped');
-%                         return;
-                    elseif ~berrorplayed  % error sound  % NOTE BA stimulus ends on errors trials this mighte be rewarding??
-                        disp('error lick')
-                        if data.trial_sounds
-                            play(noiseSound);
-                        end
-                        bstopStimulus = 1; % always stop stimulus after an outcome
-                        berrorplayed = 1;
-                        Screen('FillRect',w, uint8(data.inter_stim_level),rect);
-                        Screen('Flip', w);
-                        if  bpunish && data.visual_error    % flicker screen
+                    else
+                        if ~bpunish % reward sound
+                            disp('correct lick');
+                            if data.trial_sounds
+                                play(rewardSound);
+                            end
                             bstopStimulus = 1; % always stop stimulus after an outcome
                             Screen('FillRect',w, uint8(data.inter_stim_level),rect);
                             Screen('Flip', w);
-                            disp('stimulus stopped');
-                            
-                            nFramesError = round(data.error_length*frameRate);
-                            for j=1:nFramesError
-                                if mod(j,data.error_lifetime)/data.error_lifetime<=0.5
-                                    Screen('FillRect',w, uint8(data.background_level),rect);
-                                else
-                                    Screen('FillRect',w, uint8(data.stimulus(1).lumlevel)*0.2,rect);
-                                end
-                                Screen('Flip', w);
+                            %                         Priority(0);
+                            %                         disp('stimulus stopped');
+                            %                         return;
+                        elseif ~berrorplayed % error sound  % NOTE BA stimulus ends on errors trials this mighte be rewarding??
+                            disp('error lick');
+                            if data.trial_sounds
+                                play(noiseSound);
                             end
+                            bstopStimulus = 1; % always stop stimulus after an outcome
+                            berrorplayed = 1;
                             Screen('FillRect',w, uint8(data.inter_stim_level),rect);
                             Screen('Flip', w);
-%                             Priority(0);
-                            disp('error stimulus')
-%                             return;
-                        else
-%                             return
-%                             Priority(0);
-                            bstopStimulus =1;
-                            disp('stimulus stopped');
+                            if  bpunish && data.visual_error    % flicker screen
+                                bstopStimulus = 1; % always stop stimulus after an outcome
+                                Screen('FillRect',w, uint8(data.inter_stim_level),rect);
+                                Screen('Flip', w);
+                                disp('stimulus stopped');
+                                
+                                nFramesError = round(data.error_length*frameRate);
+                                for j=1:nFramesError
+                                    if mod(j,data.error_lifetime)/data.error_lifetime<=0.5
+                                        Screen('FillRect',w, uint8(data.background_level),rect);
+                                    else
+                                        Screen('FillRect',w, uint8(data.stimulus(1).lumlevel)*0.2,rect);
+                                    end
+                                    Screen('Flip', w);
+                                end
+                                Screen('FillRect',w, uint8(data.inter_stim_level),rect);
+                                Screen('Flip', w);
+                                %                             Priority(0);
+                                disp('error stimulus')
+                                %                             return;
+                            else
+                                %                             return
+                                %                             Priority(0);
+                                bstopStimulus =1;
+                                disp('stimulus stopped');
+                            end
+                            
                         end
-                        
                     end
                     
                    
@@ -369,11 +380,8 @@ hCtr.start();
                 getReport(me)
             end
         end
-        actualStim_length = GetSecs - extraTime - startStimTime;
-        fprintf('STIMULUS presented\t\t %1.0fms\tActual Stimulus Length %1.3f vs %1.3f\n', (actualStim_length-data.stim_length)*1000,actualStim_length, data.stim_length)
-        if abs(actualStim_length-data.stim_length) > 0.1
-            disp(['/////////////// WARNING Stim length is wrong by ' num2str(actualStim_length-data.stim_length, '%1.2f') 's //////////////'])
-        end
+        fprintf('STIMULUS presented')
+       
         Screen('FillRect',w, uint8(data.inter_stim_level),rect);
         Screen('Flip', w);
         
@@ -392,29 +400,40 @@ hCtr.start();
         if elapsedTime < 0.1
             changeNOW = 1;
             counter = 4;
-            disp('change detected')
-        elseif elapsedTime > 0.15  % end stimulus if after change
+            disp(['change detected '   num2str(elapsedTime,'%1.2f')])
+        elseif elapsedTime > 0.075 && elapsedTime < 0.15
+            bearlypunish = 1;
+            bpunish = 0;
+            boutCome = 1;
+            counter = 2;
+            disp(['early punish '   num2str(elapsedTime,'%1.2f')])
+            
+        elseif elapsedTime > 0.175  % end stimulus if after change
             bpunish = 0;
             bstopStimulus = 1;
             counter = 0;
-            disp('END detected')
+            disp(['END detected '   num2str(elapsedTime,'%1.2f')])
         end
     end
     function TriggerDetected()
         elapsedTime = toc(lastTrigger);
-        
+         bearlypunish = 0;
         if elapsedTime < 0.1
             bpunish = 0;
             boutCome = 1;
-            disp('correct detected')
-        elseif elapsedTime > 0.1 && elapsedTime < 0.15 % detected TTL in more than 100ms that means punishment
+            disp(['correct detected '   num2str(elapsedTime,'%1.2f')]')
+        elseif elapsedTime > 0.1 && elapsedTime < 0.175 % detected TTL in more than 100ms that means punishment
             bpunish = 1;
             boutCome = 1;
-            disp('punish detected')
-        elseif elapsedTime > 0.15  % end stimulus if after change
+            disp(['punish detected '   num2str(elapsedTime,'%1.2f')])
+        elseif elapsedTime > 0.195 && elapsedTime < 0.3  % end stimulus if after change
             bpunish = 0;
             bstopStimulus = 1;
-            disp('END detected')
+            disp(['END detected '   num2str(elapsedTime,'%1.2f')])
+        else
+            disp(['something else '  num2str(elapsedTime,'%1.2f')]);
+             bpunish = 0;
+            bstopStimulus = 1;
         end
     end
 
