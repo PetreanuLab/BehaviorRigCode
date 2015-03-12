@@ -35,7 +35,8 @@ switch action
         SliderParam(obj, 'respWindow', 1,0,10, x, y, 'TooltipString', 'Duration of response window.');next_row(y);
         SliderParam(obj, 'minChgDelay', 2, 0,10, x, y, 'TooltipString', 'Minimum Delay after Stimulus before CHANGE.');next_row(y);
         SliderParam(obj, 'maxChgDelay', 3, 0,10, x, y, 'TooltipString', 'max Delay after Stimulus before CHANGE used when random with max is chosen.');next_row(y);
-        MenuParam(obj, 'randomChangeDelay', {'fixed', 'random',  'random with max'},'random with max', x, y, 'TooltipString', 'Delay after Stimulus before CHANGE ');next_row(y);
+        NumeditParam(obj, 'goalMinChgDelay', [1.5 2.5 0.05 -0.02], x, y,'TooltipString', 'min max correct_stepsize error_stepsize for adaptive mode');next_row(y);
+        MenuParam(obj, 'randomChangeDelay', {'fixed', 'random',  'random with max',  'Adapt random with max'},'random with max', x, y, 'TooltipString', 'Delay after Stimulus before CHANGE ');next_row(y);
         SliderParam(obj, 'maxStimLgth', 5, 0,10, x, y, 'TooltipString', 'Max stim length.');next_row(y);
         SliderParam(obj, 'meanStimLgth', 2, 0,10, x, y, 'TooltipString', 'Mean stim length.');next_row(y);
         MenuParam(obj, 'stimDist', {'exponential', 'uniform','fixed'},'fixed', x, y, 'TooltipString', 'Distribution of stimulus lengths');next_row(y);
@@ -58,7 +59,7 @@ switch action
         DeclareGlobals(obj, 'rw_args', {'ITIMax', 'ITIMin','ITI',...
             'errorTimeOut','outDelay','setRespWindow',...
             'stimDist','maxStimLgth','meanStimLgth',...
-            'respWindow','preCue','cueDuration','stimDelay','minChgDelay','maxChgDelay','randomChangeDelay',...
+            'respWindow','preCue','cueDuration','stimDelay','goalMinChgDelay','minChgDelay','maxChgDelay','randomChangeDelay',...
             'valveTime','rewardSoundLength','errorSoundLength','errorVisualLength','earlyLickGP'});
         
         

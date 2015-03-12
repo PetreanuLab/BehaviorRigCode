@@ -38,21 +38,60 @@ switch action,
                 end
             end
             
-            if ~isempty(parsed_events.states.early_choice)
-                earlyHistory(n_done_trials) = 1;
+            if isfield(parsed_events.states, 'punish_early_licks')
+                if ~isempty(parsed_events.states.early_choice)
+                    earlyHistory(n_done_trials) = 1;
+                elseif isfield(parsed_events.states, 'punish_early_licks')
+                    if isfield(parsed_events.states, 'early_licks_stimulus_delayed3')
+                        if ~isempty(parsed_events.states.early_licks_stimulus_delayed3)
+                            earlyHistory(n_done_trials) = 1;
+                        end
+                    end
+                end
+            else
+                earlyHistory(n_done_trials) = NaN;
             end
+
             if ~isempty(parsed_events.states.missed_response)
                 missedHistory(n_done_trials) = 1;
             end
         end
+        
+        % % update Adapting variables
+        if isequal('Adapt random with max',value(randomChangeDelay))
+            
+            if ~isempty(earlyHistory)
+                blastcorrect = ~earlyHistory(end);                    %                 was last trial early?
+                if ~isnan(blastcorrect)
+                    a = value(goalMinChgDelay);
+                    mn = a(1);
+                    mx = a(2);
+                    correctstep = a(3);
+                    errorstep = a(4);
+                    % update with adapted value
+                    if blastcorrect
+                        newvalue = value(minChgDelay)+correctstep;
+                    elseif ~blastcorrect
+                        newvalue= value(minChgDelay)+errorstep;
+                    end
+                    if newvalue>mx, minChgDelay.value=mx; % check that newvalue doesn't exceed limits
+                    elseif newvalue<mn,minChgDelay.value=mn;               end
+                    
+                    if newvalue~=value(minChgDelay); % if value changed change it and update, stimulus length and max as well
+                        minChgDelay.value = newvalue;
+                        if blastcorrect
+                            maxChgDelay.value = value(maxChgDelay)+correctstep;
+                            maxStimLgth.value = value(maxStimLgth)+correctstep;
+                        elseif ~blastcorrect
+                            maxChgDelay.value= value(maxChgDelay)+errorstep;
+                            maxStimLgth.value = value(maxStimLgth)+errorstep;
+                        end
+                    end
+                end
+            end
+        end
     case 'set_next_stimulusChange'
-         % % Location that is Valid
-        switch  value(validLocationSelection)
-            case 'user'              
-                currValidLoc.value =  value(validLocation)+1; % turn boolean into 1 or 2
-            case 'random'
-                currValidLoc.value =  randi(2);
-        end    
+         
         % % Trial is Valid
         switch  value(validTrialSelection)
             case 'user'              
@@ -60,6 +99,34 @@ switch action,
             case 'random'
                 currValidTrial.value =  double(rand < value(validTrialProb));
         end
+        
+        switch value(stimchangeSelector)
+            case 'changeLocation' % select the location that will change;
+                if value(currValidTrial)
+                    if rand < value(changeLocation1) %  probablity of change at Location 1
+                        currValidLoc.value = 1;
+                    else
+                        currValidLoc.value = 2; 
+                    end
+                    
+                else
+                    if rand < value(changeLocation1)
+                        currValidLoc.value = 2;
+                    else
+                        currValidLoc.value = 1; 
+                    end
+                end
+            case 'validLocation'
+                % % Location that is Valid
+                switch  value(validLocationSelection)
+                    case 'user'
+                        currValidLoc.value =  value(validLocation)+1; % turn boolean into 1 or 2
+                    case 'random'
+                        currValidLoc.value =  randi(2);
+                end
+                
+        end
+        
         
         % % Sets the stimulus length 
         bdone=0  ;     i=0;
@@ -89,16 +156,24 @@ switch action,
             case 'random'
                 changeStimDelay = value(minChgDelay) + rand*(stim_length-value(minChgDelay)-value(respWindow));  % time fromt the begining of the stimulus to the change
             case 'random with max'
-                changeStimDelay = value(minChgDelay) + rand*(stim_length-value(minChgDelay)-value(respWindow)) * (value(maxChgDelay)- value(minChgDelay));  % time fromt the begining of the stimulus to the change                
+                changeStimDelay = value(minChgDelay) + rand*(stim_length-value(minChgDelay)-value(respWindow)) * (value(maxChgDelay)- value(minChgDelay));  % time fromt the begining of the stimulus to the change
             case 'fixed'
                 changeStimDelay = value(minChgDelay);
+            case 'Adapt random with max'    % updating is done in story history section          
+                changeStimDelay = value(minChgDelay) + rand*(stim_length-value(minChgDelay)-value(respWindow)) * (value(maxChgDelay)- value(minChgDelay));  % time fromt the begining of the stimulus to the change
+
         end
-        
+                
         % % Sets the responseWindow
         if or(and(not(value(setRespWindow)),validTrial),not(validTrial)) % responseWindow until the end of the Stimulus
             responseWindow = stim_length - changeStimDelay;
         else % use specified response window
-            responseWindow = value(respWindow);
+            if value(adaptRespWindow)
+                
+            else
+                responseWindow = value(respWindow);
+            end
+            
         end
         currResponseWindow.value = responseWindow;
         currChangeStimDelay.value = changeStimDelay;
@@ -268,12 +343,25 @@ switch action,
         
         param.stimulus(2).stim_dir    = param.stimulus(2).stim_dir + value(foilDeltaDirc_Deg);
         param.stimulus(2).lumlevel = value(currLumFoil);
-        
-        if ~value(useFoilTargetLum) % use foil/Target Lum to specify Lum of unchanging and changing stimuli respectively
-            if   ~value(currValidTrial);
-                param.stimulus(2).lumlevel  = value(currLumTarg);
-                param.stimulus(1).lumlevel = value(currLumFoil);
-            end
+        switch value(selectLumType)
+            case 'UnChange/Change'
+                % use foil/Target Lum to specify Lum of unchanging and changing stimuli respectively
+                if   ~value(currValidTrial);
+                    param.stimulus(2).lumlevel  = value(currLumTarg);
+                    param.stimulus(1).lumlevel = value(currLumFoil);
+                end
+            case 'Loc1/Loc2'
+                if  value(currValidLoc)==1 
+                    param.stimulus(1).lumlevel = value(currLumFoil);
+                    param.stimulus(2).lumlevel  = value(currLumTarg);
+                else
+                    param.stimulus(1).lumlevel = value(currLumTarg);
+                    param.stimulus(2).lumlevel  = value(currLumFoil);
+                end
+                
+                
+            otherwise % everything is already good Foil and Foil and Target is target
+                
         end
         
         % % stimulus Change  parameters ... stimulus(3)

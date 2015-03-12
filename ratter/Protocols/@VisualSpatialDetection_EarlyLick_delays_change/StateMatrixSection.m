@@ -47,8 +47,8 @@ switch action
             error('changeStimDelay must be longer than earlyLickGracePeriod')
         end
         
-        trial_length = stim_length + value(preCue); + value(cueDuration) + value(stimDelay);
-        
+        trial_length = stim_length + value(preCue); + value(cueDuration) + value(stimDelay) + 1; % BA half an second added for slop (there are some states that take time that haven't been added in shoudl add it up at some point.
+         
         %%
         %%%%%%%%%%%%%%%%%% State Machine Configuration %%%%%%%%%%%%%%%%%%%%%%%%%
         % % Sets up the assembler
@@ -300,7 +300,7 @@ switch action
             sma = add_state(sma, 'name', 'stim_onset','self_timer', changeStimDelay,...
                 'input_to_statechange', {'Tup', 'change_stimulus'}); %% OPTIONALLY PUNISH HERE
         end
-        sma = add_state(sma, 'name', 'change_stimulus','self_timer', 0.05,...%% NOTE licks in this state are ignored (the stimulus has changed but it is too early for a response) it also stops sync problems with visual code. licks (and their pulses) at the same time as the pulse to change stimulus can screw things up
+        sma = add_state(sma, 'name', 'change_stimulus','self_timer', 0.08,...%% NOTE licks in this state are ignored (the stimulus has changed but it is too early for a response) it also stops sync problems with visual code. licks (and their pulses) at the same time as the pulse to change stimulus can screw things up
             'output_actions', {'SchedWaveTrig','change_stim_wave'},...
             'input_to_statechange', {'Tup', 'response_window'}); 
         
@@ -373,6 +373,7 @@ switch action
                 'input_to_statechange', {'Tup', 'pre_iti'});
         else
             sma = add_state(sma, 'name', 'wrong_choice','self_timer', 10,...
+                'output_actions', {'SchedWaveTrig','stop_stim_wave'},...
                 'input_to_statechange', {'trial_timer_In', 'pre_iti',...
                 'trial_EARLY_LICKS_timer_In', 'pre_iti','Tup', 'pre_iti'});
             
