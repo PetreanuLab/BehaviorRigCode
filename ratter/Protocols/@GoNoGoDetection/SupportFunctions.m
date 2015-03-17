@@ -2,7 +2,14 @@ function [] = SupportFunctions(obj, action)
 
 GetSoloFunctionArgs;
 r = visRigDefs; % BA
-%persistent player
+
+gH = value(goHistory);
+cH = value(correctHistory);
+mH = value(missedHistory);
+cLoop = value(currCorrLoop);
+% % Trial is go
+correctionLoopThreshold = value(correctionLoopGoNogo);
+
 
 switch action,
     
@@ -11,84 +18,94 @@ switch action,
         %         %% UPDATE STATE MATRIX SECTION
         if n_done_trials > 0
             
+            
             goHistory(n_done_trials) = value(currGoTrial);
             loc1History(n_done_trials) = value(currLoc1);
             
-            correctHistory(n_done_trials) = NaN;
-            correctHistoryLoc1(n_done_trials) = NaN;
-            correctHistoryLoc2(n_done_trials) = NaN;
+            correctHistory(n_done_trials) = 0;
+            correctHistoryLoc1(n_done_trials) = 0;
+            correctHistoryLoc2(n_done_trials) = 0;
+            
+
             earlyHistory(n_done_trials) = 0;
             missedHistory(n_done_trials) = 0;
-            %             parsed_events.states
-            if ~isempty(parsed_events.states.wrong_choice)
-                correctHistory(n_done_trials) = 0;
-                if value(currLoc1)~=1
-                    correctHistoryLoc2(n_done_trials) = 0;
-                else
-                    correctHistoryLoc1(n_done_trials) = 0;
-                end
-                
-            elseif  ~isempty(parsed_events.states.correct_go)|| ...
+            if  ~isempty(parsed_events.states.correct_go)|| ...
                     ~isempty(parsed_events.states.correct_nogo)
                 correctHistory(n_done_trials) = 1;
                 if value(currLoc1)~=1
                     correctHistoryLoc2(n_done_trials) = 1;
+                    correctHistoryLoc1(n_done_trials) = NaN;                   
                 else
                     correctHistoryLoc1(n_done_trials) = 1;
+                    correctHistoryLoc2(n_done_trials) = NaN;
                 end
             end
-            
             
             if ~isempty(parsed_events.states.missed_response)
-                missedHistory(n_done_trials) = 1;
-                
+                missedHistory(n_done_trials) = 1;                
             end
             
             
-            % %         update adaptive parameter
-            cH = value(correctHistory);
-            mH = value(missedHistory);
-            newvalue = value(minStimLgthGo);
-            
-            if value(currGoTrial)
-                a = value(adaptStimLgthGo);
-                mn = a(1); mx = a(2); corrstep = a(3);  errstep = a(4);
-                if cH(end)==1
-                    newvalue= value(minStimLgthGo) + corrstep;
-                elseif mH(end)==1
-                    newvalue = value(minStimLgthGo) + errstep;
+            if n_done_trials > 1
+                maxcLoop = correctionLoopThreshold + [1 2];
+                % % correction loop
+                if value(currGoTrial)
+                    if cH(end)==1 && cLoop(1) >0
+                        cLoop(1) =  cLoop(1)-1;
+                    elseif mH(end)==1  &  cLoop(1) <= maxcLoop(1)
+                        cLoop(1) =  cLoop(1)+1;
+                    end
+                else % no go
+                    if cH(end)==1 && cLoop(2) >0
+                        cLoop(2) =  cLoop(2)-1;
+                    elseif cH(end)==0  &&  cLoop(2) <= maxcLoop(2)
+                        cLoop(2) =  cLoop(2)+1;
+                    end
                 end
-                if newvalue < mn
-                    newvalue = mn;
-                elseif newvalue > mx;
-                    newvalue = mx;
-                end
-                delta = newvalue -value(minStimLgthGo) ;
+                currCorrLoop.value = cLoop;
                 
-                if newvalue ~=value(minStimLgthGo)
-                    minStimLgthGo.value = value(minStimLgthGo) + delta;
-                    maxStimLgthGo.value = value(maxStimLgthGo) + delta;
-                end
-                
-            else
-                
-                a = value(adaptStimLgthNogo);
-                mn = a(1); mx = a(2); corrstep = a(3);  errstep = a(4);
-                if cH(end)==1
-                    newvalue= value(minStimLgthNogo) + corrstep;
-                elseif cH(end)==0
-                    newvalue = value(minStimLgthNogo) + errstep;
-                end
-                if newvalue < mn
-                    newvalue = mn;
-                elseif newvalue > mx;
-                    newvalue = mx;
-                end
-                delta = newvalue -value(minStimLgthNogo) ;
-                
-                if newvalue ~=value(minStimLgthNogo)
-                    minStimLgthNogo.value = value(minStimLgthNogo) + delta;
-                    maxStimLgthNogo.value = value(maxStimLgthNogo) + delta;
+                % %         update adaptive parameter
+                newvalue = value(minStimLgthGo);
+                if value(currGoTrial)
+                    a = value(adaptStimLgthGo);
+                    mn = a(1); mx = a(2); corrstep = a(3);  errstep = a(4);
+                    if cH(end)==1
+                        newvalue= value(minStimLgthGo) + corrstep;
+                    elseif mH(end)==1
+                        newvalue = value(minStimLgthGo) + errstep;
+                    end
+                    if newvalue < mn
+                        newvalue = mn;
+                    elseif newvalue > mx;
+                        newvalue = mx;
+                    end
+                    delta = newvalue -value(minStimLgthGo) ;
+                    
+                    if newvalue ~=value(minStimLgthGo)
+                        minStimLgthGo.value = value(minStimLgthGo) + delta;
+                        maxStimLgthGo.value = value(maxStimLgthGo) + delta;
+                    end
+                    
+                else
+                    
+                    a = value(adaptStimLgthNogo);
+                    mn = a(1); mx = a(2); corrstep = a(3);  errstep = a(4);
+                    if cH(end)==1
+                        newvalue= value(minStimLgthNogo) + corrstep;
+                    elseif cH(end)==0
+                        newvalue = value(minStimLgthNogo) + errstep;
+                    end
+                    if newvalue < mn
+                        newvalue = mn;
+                    elseif newvalue > mx;
+                        newvalue = mx;
+                    end
+                    delta = newvalue -value(minStimLgthNogo) ;
+                    
+                    if newvalue ~=value(minStimLgthNogo)
+                        minStimLgthNogo.value = value(minStimLgthNogo) + delta;
+                        maxStimLgthNogo.value = value(maxStimLgthNogo) + delta;
+                    end
                 end
             end
         end
@@ -98,13 +115,72 @@ switch action,
         currLoc1.value = double(rand<value(loc1Prob));
         
         % % Trial is go
+        correctionLoopThreshold = value(correctionLoopGoNogo);
+        
+        % hack to rest correction loop
         switch  value(goTrialSelection)
             case 'user'
                 currGoTrial.value =  value(userThisTrialGo);
             case 'random'
+                
+                % this is default but can be trumped by correction loops
                 currGoTrial.value =  double(rand < value(goTrialProb));
+                
+                if value(constrainRandom)
+                    a = value(randConstr);
+                    mxRandRepeat  = a(1);
+                    %                     mxRandAlt  = a(2); To Do
+                    if value(currGoTrial)==gH(end) % check ifthere are too many of the same stimulus in  a row
+                        lastSame = gH==value(currGoTrial);
+                        if all(cH(end-(mxRandRepeat-1):end) & lastSame(end-(mxRandRepeat-1):end)) % same stimulus can't occur more than maxConstrainRandome
+                            currGoTrial.value = ~value(currGoTrial);
+                        end
+                    end
+                end
+                
+            case 'use blocks'
+                % this is default but can be trumped by correction loops
+                if n_done_trials ==0 % if just starting start with Go
+                    currGoTrial.value = 1;
+                else
+                    
+                    if goHistory(end)==1    % go block
+                        blSize = value(goBlockSize);
+                        blocksize = blSize(1): blSize(2);
+                        blocksize = blocksize(randi(length(blocksize)));
+                        
+                        if length(gH) >= blocksize
+                            if nansum(gH(end-(blocksize-1):end)) >= blocksize
+                                currGoTrial.value =  0;
+                            end
+                        end
+                    else                    % no go block
+                        blSize = value(nogoBlockSize);
+                        blocksize = blSize(1): blSize(2);
+                        blocksize = blocksize(randi(length(blocksize)));
+                        if  length(gH) >= blocksize
+                            if nansum(~gH(end-(blocksize-1):end)) >= blocksize
+                                currGoTrial.value =  1;
+                            end
+                        end
+                    end
+                end
         end
         
+        
+        bcorrectionLoopHistory(n_done_trials+1) = 0;
+        % correction loops (don't use them for user mode)
+        if value(bCorrLoop) && ~isequal(value(goTrialSelection),'user')
+            if correctionLoopThreshold(1) >0 && ...
+                    currCorrLoop(1)>= correctionLoopThreshold(1)
+                currGoTrial.value  = 1;
+                bcorrectionLoopHistory(n_done_trials+1) = 1;
+            elseif correctionLoopThreshold(2) >0 && ...
+                    currCorrLoop(2)>= correctionLoopThreshold(2)
+                currGoTrial.value  = 0;
+                bcorrectionLoopHistory(n_done_trials+1) = 1;
+            end
+        end
         % % Sets the stimulus length
         if value(currGoTrial)
             stim_length = value(minStimLgthGo) + rand*(value(maxStimLgthGo)-value(minStimLgthGo));
@@ -176,14 +252,14 @@ switch action,
         if n_done_trials > value(meanSize)
             
             indmean = [(n_done_trials-value(meanSize)+1):n_done_trials];
-            indGo = goHistory(indmean)==1;
+            indGo = goHistory(indmean)==1
             indMiss = missedHistory(indmean)==1;
             indNogo = goHistory(indmean)==0;
-            
+            correctHistory(indmean(indNogo))
             performance.value = nanmean( correctHistory(indmean));
             nogoPerf.value=  nanmean(correctHistory(indmean(indNogo)));
             missFrac.value=  nansum(missedHistory(indmean))/meanSize;
-            goPerf.value  =  nanmean(correctHistory(indmean(indGo)))-value(missFrac);
+            goPerf.value  =  nanmean(correctHistory(indmean(indGo)));
             earlyFrac.value=  nansum(earlyHistory(indmean))/meanSize;
             
             performanceLoc1.value =  nanmean( correctHistoryLoc1(indmean));
@@ -212,8 +288,8 @@ switch action,
         param.rand_seed = value(currRandSeed);
         
         % % timing properties
-        param.pre_cue           = 0
-        param.cue_length        = 0
+        param.pre_cue           = 0;
+        param.cue_length        = 0;
         param.stim_delay        = value(currStimOnset); % after the cue
         param.stim_length       = value(currStimDuration);
         

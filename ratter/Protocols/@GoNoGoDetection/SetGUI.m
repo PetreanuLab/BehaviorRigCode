@@ -82,6 +82,7 @@ switch action,
         
           
         %% Current trial section
+        
         DispParam(obj, 'currRandSeed', NaN, x, y); next_row(y); 
         DispParam(obj, 'currDirection', NaN, x, y); next_row(y);         
         DispParam(obj, 'currLifeTime', NaN, x, y); next_row(y);
@@ -94,6 +95,7 @@ switch action,
         DispParam(obj, 'currStimDuration', NaN, x, y); next_row(y);
         DispParam(obj, 'currStimOnset', NaN, x, y); next_row(y);
         DispParam(obj, 'currGoTrial', NaN, x, y); next_row(y); % 1 if the current trials is a "go" trial i.e. attented stimulus changes
+        DispParam(obj, 'currCorrLoop', [0 0], x, y); next_row(y); % 1 if the current trials is a "go" trial i.e. attented stimulus changes
         DispParam(obj, 'currLoc1', NaN, x, y); next_row(y); % 1 if the current trials is a "go" trial i.e. attented stimulus changes
         SubheaderParam(obj, 'currentHeader', 'Current Trial', x, y); next_row(y,1.5);
         
@@ -182,7 +184,7 @@ switch action,
             'timingsToggle','monitorToggle','stimulusToggle','trialToggle',...
             'soundToggle','treadmillToggle',...
             'meanSize','goHistory','loc1History',...
-            'correctHistory','correctHistoryLoc1','correctHistoryLoc2','earlyHistory','missedHistory',...
+            'currCorrLoop','correctHistory','correctHistoryLoc1','correctHistoryLoc2','earlyHistory','missedHistory',...
             'photoStim'});
 
         % RESET POSITION F DISPATCHER

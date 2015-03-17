@@ -17,7 +17,7 @@ switch action
         SoloParamHandle(obj, 'trial_fig', 'saveable', 0); trial_fig.value = figure;
                 name = 'Trial Settings';
         set(value(trial_fig), 'Name', name, 'Tag', name, ...
-            'Position', [ 1116          52         215         180], 'Visible', 'off',...
+            'Position', [ 1116          52         215         305], 'Visible', 'off',...
                     'MenuBar', 'none',    'NumberTitle', 'off',...    
             'closerequestfcn', ['TrialGUI(' class(obj) ',''hide'')']);
           
@@ -30,12 +30,32 @@ switch action
         ToggleParam(obj, 'rewardWitholding', 0, x, y); next_row(y);
         ToggleParam(obj, 'punishError', 1, x, y); next_row(y);
         ToggleParam(obj, 'freeWaterAtChange', 0, x, y); next_row(y);
-        ToggleParam(obj, 'visualError', 0, x, y); next_row(y);       
+        ToggleParam(obj, 'visualError', 0, x, y); next_row(y);
+        ToggleParam(obj, 'bCorrLoop', 0, x, y, 'OnString', 'Correction Loop', 'OffString', 'NO Correction Loop'); next_row(y);
+        set_callback(bCorrLoop, {'TrialGUI', 'clear correction loop'});
+        
+        NumeditParam(obj, 'correctionLoopGoNogo', [3 3], x, y, 'TooltipString', ...
+            'number of error trials before entering the correction loop',  'labelfraction', 0.5);next_row(y);
+        NumeditParam(obj, 'goBlockSize', [1 2], x, y, 'TooltipString', ...
+            'min and max',  'labelfraction', 0.5);next_row(y);
+        NumeditParam(obj, 'nogoBlockSize', [3 6], x, y, 'TooltipString', ...
+            'min and max',  'labelfraction', 0.5);next_row(y);
+        NumeditParam(obj, 'randConstr', 4, x, y, 'TooltipString', ...
+            'max number in a row during random',  'labelfraction', 0.5);next_row(y);
+        ToggleParam(obj, 'constrainRandom', 0, x, y, 'OnString', 'constrainRand', 'OffString', 'Real Rand'); next_row(y);
+        NumeditParam(obj, 'goTrialProb', 0.8, x, y, 'TooltipString', 'Probablity that a trial will be Go with Random Trial Selection');next_row(y);
+        MenuParam(obj, 'goTrialSelection', {'user', 'random', 'use blocks'},'user', x, y, 'TooltipString', '');next_row(y);
+        ToggleParam(obj, 'userThisTrialGo', 1, x, y, 'OnString', 'Go' ,'OffString', 'Nogo', 'TooltipString', '...');        next_row(y,1.5);
         %SubheaderParam(obj, 'trialHeader', 'Trial Settings', x, y); next_row(y,1.5);
         DeclareGlobals(obj, 'rw_args', {'punishError','rewardWitholding',...
-           'stopLick','treadmillStim','visualError','freeWaterAtChange'});
+           'stopLick','treadmillStim','visualError','freeWaterAtChange',...
+           'bCorrLoop','correctionLoopGoNogo','goBlockSize','nogoBlockSize',...
+           'goTrialProb','constrainRandom','randConstr','goTrialSelection','userThisTrialGo'});
         
         
+    %% CASE show
+    case 'clear correction loop'      
+        currCorrLoop.value = [0 0] ;
     %% CASE show
     case 'show'
             set(value(trial_fig), 'Visible', 'on');

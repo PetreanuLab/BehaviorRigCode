@@ -215,10 +215,28 @@ switch action
         % % insert punish early licks here
         % % STIMULUS presentation state
         if goTrial
-            sma = add_state(sma, 'name', 'stim_onset','self_timer', 0.25,...% this pause is so an fast lick doesn't screw up sync
-                'output_actions', {'SchedWaveTrig','stimulus_trigger'},... % present stimulus
-                'input_to_statechange', {'Tup', 'go_response_window'});
             
+            if value(freeWaterAtChange)
+                sma = add_state(sma, 'name', 'stim_onset','self_timer', 1,...%  show stimulus for a sec
+                    'output_actions', {'SchedWaveTrig','stimulus_trigger'},... % 
+                    'input_to_statechange', {'Tup', 'freewater'});
+                sma = add_state(sma, 'name', 'freewater','self_timer', 0.25,...% give water
+                    'output_actions', {'SchedWaveTrig','reward_delivery'},...
+                    'input_to_statechange', {'Tup', 'freewater_await_lick'});
+                sma = add_state(sma, 'name', 'freewater_await_lick','self_timer', 1,...% wait for lick
+                    'input_to_statechange', {lick,'freewater_stop_stimulus_lick','Tup', 'freewater_stop_stimulus'});
+                sma = add_state(sma, 'name', 'freewater_stop_stimulus_lick','self_timer', 0.001,...% give reward tone and stop stimulus
+                    'output_actions', {'SchedWaveTrig','correct_lick'},...
+                    'input_to_statechange', {'Tup', 'pre_iti'});
+               sma = add_state(sma, 'name', 'freewater_stop_stimulus','self_timer', 0.001,...% give reward tone and stop stimulus
+                    'output_actions', {'SchedWaveTrig','stop_stimulus_trigger'},...
+                    'input_to_statechange', {'Tup', 'pre_iti'});
+                
+            else
+                sma = add_state(sma, 'name', 'stim_onset','self_timer', 0.25,...% this pause is so an fast lick doesn't screw up sync
+                    'output_actions', {'SchedWaveTrig','stimulus_trigger'},... % present stimulus
+                    'input_to_statechange', {'Tup', 'go_response_window'});
+            end
         else
             sma = add_state(sma, 'name', 'stim_onset','self_timer', 0.25,... % this pause is so an fast lick doesn't screw up sync
                 'output_actions', {'SchedWaveTrig','stimulus_trigger'},... % present stimulus
@@ -266,7 +284,7 @@ switch action
         % Wrong choice state
         if  value(punishError)  % In case we punish the animals for making a mistake
             % Informs toolbox and waits error time-out
-            sma = add_state(sma, 'name', 'wrong_choice','self_timer', 10,...
+            sma = add_state(sma, 'name', 'wrong_choice','self_timer', value(errorTimeOut),...
                 'output_actions', {'SchedWaveTrig','wrong_lick'},...
                 'input_to_statechange', {'trial_timer_In', 'wrong_choice_2','Tup', 'wrongChoice_timeout'}); % there is a hack here the Tup state change.. (is is possilbe that trial timer IN has already happened in this stage?
  
