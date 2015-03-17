@@ -326,7 +326,7 @@ hCtr.start();
             counter = 2; % go back and wait for stop stimulus
             boutCome = 1;
             disp(['punish detected '   num2str(elapsedTime,'%1.2f')]);
-        elseif elapsedTime > 0.19 && elapsedTime < 0.26  % end stimulus if after change
+        elseif elapsedTime > 0.19 && elapsedTime < 0.24  % end stimulus if after change
             bpunish = 0;
             bstopStimulus = 1;
             counter =0;
