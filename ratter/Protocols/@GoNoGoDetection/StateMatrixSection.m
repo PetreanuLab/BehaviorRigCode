@@ -217,13 +217,15 @@ switch action
         if goTrial
             
             if value(freeWaterAtChange)
-                sma = add_state(sma, 'name', 'stim_onset','self_timer', 1,...%  show stimulus for a sec
+                sma = add_state(sma, 'name', 'stim_onset','self_timer', 0.05,...%  show stimulus for a sec
                     'output_actions', {'SchedWaveTrig','stimulus_trigger'},... % 
-                    'input_to_statechange', {'Tup', 'freewater'});
+                    'input_to_statechange', {'Tup', 'stim_onset2'});
+                sma = add_state(sma, 'name', 'stim_onset2','self_timer', value(outDelay),...%  show stimulus for a sec
+                    'input_to_statechange', {'Tup', 'freewater',lick,'correct_go'});
                 sma = add_state(sma, 'name', 'freewater','self_timer', 0.25,...% give water
                     'output_actions', {'SchedWaveTrig','reward_delivery'},...
                     'input_to_statechange', {'Tup', 'freewater_await_lick'});
-                sma = add_state(sma, 'name', 'freewater_await_lick','self_timer', 1,...% wait for lick
+                sma = add_state(sma, 'name', 'freewater_await_lick','self_timer', 4,...% wait for lick
                     'input_to_statechange', {lick,'freewater_stop_stimulus_lick','Tup', 'freewater_stop_stimulus'});
                 sma = add_state(sma, 'name', 'freewater_stop_stimulus_lick','self_timer', 0.001,...% give reward tone and stop stimulus
                     'output_actions', {'SchedWaveTrig','correct_lick'},...

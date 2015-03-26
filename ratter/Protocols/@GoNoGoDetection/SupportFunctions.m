@@ -3,10 +3,6 @@ function [] = SupportFunctions(obj, action)
 GetSoloFunctionArgs;
 r = visRigDefs; % BA
 
-gH = value(goHistory);
-cH = value(correctHistory);
-mH = value(missedHistory);
-cLoop = value(currCorrLoop);
 % % Trial is go
 correctionLoopThreshold = value(correctionLoopGoNogo);
 
@@ -29,12 +25,17 @@ switch action,
 
             earlyHistory(n_done_trials) = 0;
             missedHistory(n_done_trials) = 0;
-            if  ~isempty(parsed_events.states.correct_go)|| ...
-                    ~isempty(parsed_events.states.correct_nogo)
+            if goHistory(n_done_trials)
+                if~isempty(parsed_events.states.correct_go)
+                    correctHistory(n_done_trials) = 1;
+                end
+            elseif isempty(parsed_events.states.wrong_choice)
                 correctHistory(n_done_trials) = 1;
+            end
+            if correctHistory(n_done_trials)
                 if value(currLoc1)~=1
                     correctHistoryLoc2(n_done_trials) = 1;
-                    correctHistoryLoc1(n_done_trials) = NaN;                   
+                    correctHistoryLoc1(n_done_trials) = NaN;
                 else
                     correctHistoryLoc1(n_done_trials) = 1;
                     correctHistoryLoc2(n_done_trials) = NaN;
@@ -45,9 +46,13 @@ switch action,
                 missedHistory(n_done_trials) = 1;                
             end
             
+            cH = value(correctHistory);
+            mH = value(missedHistory);
             
             if n_done_trials > 1
                 maxcLoop = correctionLoopThreshold + [1 2];
+                
+                cLoop = value(currCorrLoop);
                 % % correction loop
                 if value(currGoTrial)
                     if cH(end)==1 && cLoop(1) >0
@@ -116,6 +121,8 @@ switch action,
         
         % % Trial is go
         correctionLoopThreshold = value(correctionLoopGoNogo);
+        gH = value(goHistory);
+        cH = value(correctHistory);
         
         % hack to rest correction loop
         switch  value(goTrialSelection)
@@ -125,21 +132,25 @@ switch action,
                 
                 % this is default but can be trumped by correction loops
                 currGoTrial.value =  double(rand < value(goTrialProb));
+                a = value(randConstr);
+                mxRandRepeat  = a(1);
                 
-                if value(constrainRandom)
-                    a = value(randConstr);
-                    mxRandRepeat  = a(1);
-                    %                     mxRandAlt  = a(2); To Do
-                    if value(currGoTrial)==gH(end) % check ifthere are too many of the same stimulus in  a row
-                        lastSame = gH==value(currGoTrial);
-                        if all(cH(end-(mxRandRepeat-1):end) & lastSame(end-(mxRandRepeat-1):end)) % same stimulus can't occur more than maxConstrainRandome
-                            currGoTrial.value = ~value(currGoTrial);
+                if ~isempty(gH) & length(cH)>=mxRandRepeat
+                    if value(constrainRandom)
+                        %                     mxRandAlt  = a(2); To Do
+                        if value(currGoTrial)==gH(end) % check ifthere are too many of the same stimulus in  a row
+                            lastSame = gH==value(currGoTrial);
+                            thisTrialgo = value(currGoTrial);
+                            if all(cH(end-(mxRandRepeat-1):end) & lastSame(end-(mxRandRepeat-1):end)) % same stimulus can't occur more than maxConstrainRandome
+                                currGoTrial.value = double(~thisTrialgo);
+                            end
                         end
                     end
                 end
                 
             case 'use blocks'
                 % this is default but can be trumped by correction loops
+                
                 if n_done_trials ==0 % if just starting start with Go
                     currGoTrial.value = 1;
                 else
@@ -171,14 +182,17 @@ switch action,
         bcorrectionLoopHistory(n_done_trials+1) = 0;
         % correction loops (don't use them for user mode)
         if value(bCorrLoop) && ~isequal(value(goTrialSelection),'user')
+            lastCLoop.value = 0
             if correctionLoopThreshold(1) >0 && ...
                     currCorrLoop(1)>= correctionLoopThreshold(1)
                 currGoTrial.value  = 1;
                 bcorrectionLoopHistory(n_done_trials+1) = 1;
+                 lastCLoop.value = 1;
             elseif correctionLoopThreshold(2) >0 && ...
                     currCorrLoop(2)>= correctionLoopThreshold(2)
                 currGoTrial.value  = 0;
                 bcorrectionLoopHistory(n_done_trials+1) = 1;
+                                 lastCLoop.value = 1;
             end
         end
         % % Sets the stimulus length
@@ -238,7 +252,9 @@ switch action,
         currLifeTime.value = dotLifeTime(find(lifeTimeRand <= lifeTimeCumProb,1));
         
     case 'update_disp_param'
-        
+        gH = value(goHistory);
+        cH = value(correctHistory);
+
         if n_done_trials > 0
             lastCorrect.value = correctHistory(n_done_trials);
             lastLoc.value = loc1History(n_done_trials);
