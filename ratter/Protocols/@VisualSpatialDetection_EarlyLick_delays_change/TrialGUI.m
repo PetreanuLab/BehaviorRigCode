@@ -17,7 +17,7 @@ switch action
         SoloParamHandle(obj, 'trial_fig', 'saveable', 0); trial_fig.value = figure;
                 name = 'Trial Settings';
         set(value(trial_fig), 'Name', name, 'Tag', name, ...
-            'Position', [451    38   215   220], 'Visible', 'off',...
+            'Position', [451    38   215   240], 'Visible', 'off',...
                     'MenuBar', 'none',    'NumberTitle', 'off',...    
             'closerequestfcn', ['TrialGUI(' class(obj) ',''hide'')']);
           
@@ -27,6 +27,7 @@ switch action
         % Trial menu
         ToggleParam(obj, 'treadmillStim', 0, x, y); next_row(y);
         ToggleParam(obj, 'stopLick',0,x,y); next_row(y);
+        ToggleParam(obj, 'punishITILick', 0, x, y,'TooltipString', 'UNUSED'); next_row(y);
         ToggleParam(obj, 'punishEarlyLick', 0, x, y); next_row(y);
         ToggleParam(obj, 'punishEarlyLkNoise', 0, x, y); next_row(y);
         MenuParam(obj, 'punishEarlyLickType', {'end_the_trial', 'delay_stim_change'},'end_the_trial', x, y,'TooltipString', 'only active is punishEarlyLick is toggled');next_row(y);
@@ -37,7 +38,7 @@ switch action
         ToggleParam(obj, 'visualError', 0, x, y); next_row(y);
         %SubheaderParam(obj, 'trialHeader', 'Trial Settings', x, y); next_row(y,1.5);
         DeclareGlobals(obj, 'rw_args', {'punishError','rewardWitholding','resetITI',...
-            'punishEarlyLick','punishEarlyLkNoise','punishEarlyLickType','stopLick','treadmillStim','visualError','freeWaterAtChange'});
+            'punishITILick','punishEarlyLick','punishEarlyLkNoise','punishEarlyLickType','stopLick','treadmillStim','visualError','freeWaterAtChange'});
         
         
     %% CASE show

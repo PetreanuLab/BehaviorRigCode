@@ -24,8 +24,8 @@ switch action
         x=10; y=10;
         
         % ----------------------  sound Parameters -----------------------
-        NumeditParam(obj, 'soundInvalidVolume', [10 8 6 4 2], x, y, 'TooltipString', 'UNUSED sound volume during Stimulus during invalid trials');next_row(y);
-        NumeditParam(obj, 'soundInvalidVolumeProb', [1 0 0 0 0], x, y, 'TooltipString', 'UNUSED volume probabilities');next_row(y);
+        NumeditParam(obj, 'changeSoundVolume', [10 8 6 4 2], x, y, 'TooltipString', ' sound volume at change');next_row(y);
+        NumeditParam(obj, 'changeSoundVolumeProb', [1 0 0 0 0], x, y, 'TooltipString', ' volume probabilities');next_row(y);
         MenuParam(obj, 'cue1Frequency', {'2','4','7','8','10','12'},12, x, y, 'TooltipString', 'Sound frequency paired with right direction in kHz.');next_row(y);
         MenuParam(obj, 'cue2Frequency', {'2','4','7','8','10','12'},7, x, y, 'TooltipString', 'Sound frequency paired with left direction in kHz.');next_row(y);
         SliderParam(obj, 'errorSoundVolume', 3, 0,10, x, y, 'TooltipString', 'Error sound volume');next_row(y)
@@ -34,7 +34,7 @@ switch action
         %SubheaderParam(obj, 'soundHeader', 'Sound Parameters', x, y); next_row(y,1.5);
         
         DeclareGlobals(obj, 'rw_args', {'cue1Frequency', 'cue2Frequency',...
-            'soundInvalidVolume','soundInvalidVolumeProb','errorSoundVolume'...
+            'changeSoundVolume','changeSoundVolumeProb','errorSoundVolume'...
             'soundTrial','soundVolume'});
         
         

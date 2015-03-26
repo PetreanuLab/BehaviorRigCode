@@ -19,15 +19,15 @@ switch action,
             correctHistoryLoc2(n_done_trials) = NaN;
             earlyHistory(n_done_trials) = 0;
             missedHistory(n_done_trials) = 0;
-%             parsed_events.states
-            if ~isempty(parsed_events.states.wrong_choice) 
+            %             parsed_events.states
+            if ~isempty(parsed_events.states.wrong_choice)
                 correctHistory(n_done_trials) = 0;
                 if value(currValidLoc)==2
                     correctHistoryLoc2(n_done_trials) = 0;
                 else
                     correctHistoryLoc1(n_done_trials) = 0;
                 end
-            
+                
             elseif  ~isempty(parsed_events.states.correct_valid)|| ...
                     ~isempty(parsed_events.states.correct_invalid)
                 correctHistory(n_done_trials) = 1;
@@ -51,7 +51,7 @@ switch action,
             else
                 earlyHistory(n_done_trials) = NaN;
             end
-
+            
             if ~isempty(parsed_events.states.missed_response)
                 missedHistory(n_done_trials) = 1;
             end
@@ -60,7 +60,7 @@ switch action,
         % % update Adapting variables
         if isequal('Adapt random with max',value(randomChangeDelay))
             
-            if ~isempty(earlyHistory)
+            if ~isempty(earlyHistory) && ~isnan(earlyHistory(end))
                 blastcorrect = ~earlyHistory(end);                    %                 was last trial early?
                 if ~isnan(blastcorrect)
                     a = value(goalMinChgDelay);
@@ -91,10 +91,10 @@ switch action,
             end
         end
     case 'set_next_stimulusChange'
-         
+        
         % % Trial is Valid
         switch  value(validTrialSelection)
-            case 'user'              
+            case 'user'
                 currValidTrial.value =  value(userThisTrialValid);
             case 'random'
                 currValidTrial.value =  double(rand < value(validTrialProb));
@@ -106,14 +106,14 @@ switch action,
                     if rand < value(changeLocation1) %  probablity of change at Location 1
                         currValidLoc.value = 1;
                     else
-                        currValidLoc.value = 2; 
+                        currValidLoc.value = 2;
                     end
                     
                 else
                     if rand < value(changeLocation1)
                         currValidLoc.value = 2;
                     else
-                        currValidLoc.value = 1; 
+                        currValidLoc.value = 1;
                     end
                 end
             case 'validLocation'
@@ -128,12 +128,12 @@ switch action,
         end
         
         
-        % % Sets the stimulus length 
+        % % Sets the stimulus length
         bdone=0  ;     i=0;
         while ~bdone
             switch value(stimDist)
                 case 'exponential'
-            stim_length=exprnd(value(meanStimLgth));
+                    stim_length=exprnd(value(meanStimLgth));
                 case 'uniform'
                     stim_length = value(minChgDelay) + rand*(value(maxStimLgth)-value(minChgDelay));
                 case 'fixed'
@@ -143,9 +143,12 @@ switch action,
             if or(stim_length>value(maxStimLgth),(stim_length<(value(minChgDelay)+value(respWindow))))
                 bdone=0;
             end
-                
+            
             i=i+1;
-            if i>50,             error('Cannot find stimulus length for parameters') ;         end
+            if i>50,             warning('Cannot find stimulus length for parameters') ;
+                stim_length = value(minChgDelay)+value(respWindow)+0.1;
+                maxStimLgth.value  = stim_length;
+            end
         end
         
         currStimDuration.value = stim_length;
@@ -159,49 +162,46 @@ switch action,
                 changeStimDelay = value(minChgDelay) + rand*(stim_length-value(minChgDelay)-value(respWindow)) * (value(maxChgDelay)- value(minChgDelay));  % time fromt the begining of the stimulus to the change
             case 'fixed'
                 changeStimDelay = value(minChgDelay);
-            case 'Adapt random with max'    % updating is done in story history section          
+            case 'Adapt random with max'    % updating is done in story history section
                 changeStimDelay = value(minChgDelay) + rand*(stim_length-value(minChgDelay)-value(respWindow)) * (value(maxChgDelay)- value(minChgDelay));  % time fromt the begining of the stimulus to the change
-
-        end
                 
+        end
+        
         % % Sets the responseWindow
         if or(and(not(value(setRespWindow)),validTrial),not(validTrial)) % responseWindow until the end of the Stimulus
             responseWindow = stim_length - changeStimDelay;
         else % use specified response window
-            if value(adaptRespWindow)
-                
-            else
-                responseWindow = value(respWindow);
-            end
-            
+            responseWindow = value(respWindow);
         end
         currResponseWindow.value = responseWindow;
         currChangeStimDelay.value = changeStimDelay;
         
         % %  stimulus Change   paramters
-        currCohChg.value = getprob(cohChg,cohChgProb)  ;     
+        currCohChg.value = getprob(cohChg,cohChgProb)  ;
         currDirnDeltaChg.value = getprob(dirnDeltaChg,dirnDeltaChgProb);
-        currLumChg.value = getprob(lumChg,lumChgProb)  ;     
+        currLumChg.value = getprob(lumChg,lumChgProb)  ;
         currSpeedChg.value = getprob(speedChg,speedChgProb);
-
-        % % set Sounds during Trial if it is Invalid
-        if ~value(currValidTrial)
-        currSoundInvalidVolume.value = getprob(soundInvalidVolume,soundInvalidVolumeProb);
-        else currSoundInvalidVolume.value = 0; end
         
-     
+        currChangeVolume.value = getprob(changeSoundVolume,changeSoundVolumeProb);
+        
+        
         % check timing makes sense
         if value(errorTimeOut) < value(errorSoundLength) ||...
-                 value(errorTimeOut) < value(errorVisualLength) 
-             errorSoundLength.value = value(errorTimeOut);
-             errorVisualLength.value = value(errorTimeOut);
-             warning('errorTimeOut is too short. Shorter than errorSoundLength or errorVisualLength, This has been corrected')
-             
-             
+                value(errorTimeOut) < value(errorVisualLength)
+            errorSoundLength.value = value(errorTimeOut);
+            errorVisualLength.value = value(errorTimeOut);
+            warning('errorTimeOut is too short. Shorter than errorSoundLength or errorVisualLength, This has been corrected')
+            
+            
         end
-       
         
-    case 'set_next_dots'      
+        if (value(earlyTimeOut)+value(ITIMax)+1) < value(errorSoundLength) ||...
+                (value(earlyTimeOut)+value(ITIMax)+1) < value(errorVisualLength)
+            earlyTimeOut.value = max( value(errorVisualLength), value(errorSoundLength) ) ...
+                - (value(ITIMax)+1)+0.3; % 1 is from preITI and 0.3 is for safety
+            warning('earlyTimeOut is too short. Shorter than errorSoundLength or errorVisualLength, This has been corrected')
+        end
+    case 'set_next_dots'
         
         if strcmp(value(randSeed),'random')
             currRandSeed.value=randi(1000);
@@ -209,11 +209,11 @@ switch action,
             currRandSeed.value=value(randSeed);
         end
         
-        % % For TARGET and FOIL 
+        % % For TARGET and FOIL
         stimSizeDegCumProb = cumsum(value(stimSizeDegProb));
         stimSizeDegRand = rand*stimSizeDegCumProb(end);
         currStimSizeDeg.value = stimSizeDeg(find(stimSizeDegRand <= stimSizeDegCumProb,1));
-              
+        
         coherCumProb = cumsum(value(dotCoherProb));
         coherRand = rand*coherCumProb(end);
         currCoher.value = dotCoher(find(coherRand <= coherCumProb,1));
@@ -234,11 +234,11 @@ switch action,
         lifeTimeRand = rand*lifeTimeCumProb(end);
         currLifeTime.value = dotLifeTime(find(lifeTimeRand <= lifeTimeCumProb,1));
         
-            currLumFoil.value = getprob(foilLum,foilLumProb);
-            currLumTarg.value = getprob(targetLum,targetLumProb);
-   
-
-
+        currLumFoil.value = getprob(foilLum,foilLumProb);
+        currLumTarg.value = getprob(targetLum,targetLumProb);
+        
+        
+        
         
         
     case 'update_disp_param'
@@ -265,7 +265,7 @@ switch action,
             invalidPerf.value=  nanmean(correctHistory(indmean(indInValid)));
             missFrac.value=  nansum(missedHistory(indmean))/meanSize;
             earlyFrac.value=  nansum(earlyHistory(indmean))/meanSize;
-
+            
             performanceLoc1.value =  nanmean( correctHistoryLoc1(indmean));
             performanceLoc2.value = nanmean( correctHistoryLoc2(indmean));
             
@@ -291,6 +291,7 @@ switch action,
         param.inter_stim_level  = value(intStimLum);
         param.rand_seed = value(currRandSeed);
         param.punishEarlyLickNoise = value(punishEarlyLkNoise);
+        param.punishEarlyLickType = value(punishEarlyLickType);
         % % timing properties
         param.pre_cue           = value(preCue);
         param.cue_length        = value(cueDuration);
@@ -312,8 +313,8 @@ switch action,
             param.cue_centre_px = value(stim2Pos);
         end
         
-
-        % % Random dot properties of all spatial stimuluss 
+        
+        % % Random dot properties of all spatial stimuluss
         % % NOTE: stimulus(1) is the Target
         param.stimulus(1).lumlevel =  value(currLumTarg);
         param.stimulus(1).radius_px = round(param.diag_px/param.diag_cm*param.radius_cm);
@@ -336,10 +337,10 @@ switch action,
             param.stimulus(1).centre_px = value(stim1Pos);
             param.stimulus(2).centre_px = value(stim2Pos);
         else
-            param.stimulus(1).centre_px = value(stim2Pos); 
-            param.stimulus(2).centre_px = value(stim1Pos); 
+            param.stimulus(1).centre_px = value(stim2Pos);
+            param.stimulus(2).centre_px = value(stim1Pos);
         end
-      
+        
         
         param.stimulus(2).stim_dir    = param.stimulus(2).stim_dir + value(foilDeltaDirc_Deg);
         param.stimulus(2).lumlevel = value(currLumFoil);
@@ -351,7 +352,7 @@ switch action,
                     param.stimulus(1).lumlevel = value(currLumFoil);
                 end
             case 'Loc1/Loc2'
-                if  value(currValidLoc)==1 
+                if  value(currValidLoc)==1
                     param.stimulus(1).lumlevel = value(currLumFoil);
                     param.stimulus(2).lumlevel  = value(currLumTarg);
                 else
@@ -382,7 +383,7 @@ switch action,
         param.stimulus(3).dot_speed_cm = tan(value(param.stimChange_speed)*pi/180)*value(distCm);
         param.stimulus(3).dot_speed_px = param.diag_px/param.diag_cm*param.stimulus(3).dot_speed_cm;
         % % other stimulus are distractors/Foils
-
+        
         %% Others
         param. validTrial       =  value(currValidTrial);
         
@@ -392,12 +393,12 @@ switch action,
         param.error_sound_volume = value(errorSoundVolume);
         param.reward_sound_length = value(rewardSoundLength);
         param.sound_volume      = value(soundVolume);
+        param.change_sound_volume = value(currChangeVolume);
         
-        param.sound_invalid_volume = value(currSoundInvalidVolume);
         param.trial_sounds      = value(soundTrial);
         param.after_lick        = value(outDelay);
         param.stop_stimulus     = value(stopLick);
-        param.visual_error      = value(visualError);     
+        param.visual_error      = value(visualError);
         
         save(fullfile(r.DIR.ratter, 'next_trial'),'param');
         
@@ -409,8 +410,8 @@ end
 % % helper function
 
 function out = getprob(val,Prob)
-       CumProb = cumsum(value(Prob));
-        valRand = rand*CumProb(end);
-        out = val(find(valRand <= CumProb,1));
+CumProb = cumsum(value(Prob));
+valRand = rand*CumProb(end);
+out = val(find(valRand <= CumProb,1));
 end
 

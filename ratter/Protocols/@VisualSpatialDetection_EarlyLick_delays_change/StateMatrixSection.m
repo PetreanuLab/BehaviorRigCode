@@ -44,7 +44,9 @@ switch action
         changeStimDelay = value(currChangeStimDelay);
         punishEarlyLicksWindow  =changeStimDelay - earlyLickGracePeriod;
         if punishEarlyLicksWindow <0
-            error('changeStimDelay must be longer than earlyLickGracePeriod')
+            warning('changeStimDelay must be longer than earlyLickGracePeriod. Fixed')
+            earlyLickGracePeriod.value = changeStimDelay;
+            punishEarlyLicksWindow = 0.001;
         end
         
         trial_length = stim_length + value(preCue); + value(cueDuration) + value(stimDelay) + 1; % BA half an second added for slop (there are some states that take time that haven't been added in shoudl add it up at some point.
@@ -347,6 +349,12 @@ switch action
         
         sma = add_state(sma, 'name', 'reward_state','self_timer', 0.001,...
             'output_actions', {'SchedWaveTrig','reward_delivery+correct_lick'},...
+            'input_to_statechange', {'Tup', 'pre_stimulus_off'});
+       sma = add_state(sma, 'name', 'pre_stimulus_off','self_timer', 1 + rand*0.5,... % NOTE this changes the stimulus off time for correct trials
+            'input_to_statechange', {'Tup', 'stimulus_off'});
+        
+        sma = add_state(sma, 'name', 'stimulus_off','self_timer', 0.001 ,... % leave the stimulus on for 1-2 secs
+            'output_actions', {'SchedWaveTrig','stop_stim_wave'},...
             'input_to_statechange', {'Tup', 'pre_iti'});
         
         
@@ -383,9 +391,12 @@ switch action
         
         % Early  choice state
         sma = add_state(sma, 'name', 'early_choice','self_timer', 0.001,...
-             'output_actions', {'SchedWaveTrig' 'stop_stim_wave' },...
-             'input_to_statechange', {'cue_stimulus_No_trigger_In', 'pre_iti'});
-        % This State gives time for the stimulus information to be computed before the
+                          'output_actions', {'SchedWaveTrig' 'wrong_lick' },... 
+             'input_to_statechange', {'cue_stimulus_No_trigger_In', 'early_choice_timeout'});
+       sma = add_state(sma, 'name', 'early_choice_timeout','self_timer', max(value(earlyTimeOut),0.001),...
+             'input_to_statechange', {'Tup', 'pre_iti'});
+%                'output_actions', {'SchedWaveTrig' 'stop_stim_wave' },...
+      % This State gives time for the stimulus information to be computed before the
         % StimulusPresntation program is called by thenext trigger
         preITItime =1;
         sma = add_state(sma, 'name', 'pre_iti','self_timer',preITItime,...
@@ -393,10 +404,24 @@ switch action
             'input_to_statechange', {'Tup','inter_trial_interval'});
         
         % Inter trial interval state
-        % Loads next trial stimulus and waits ITI before ending the trial
-        sma = add_state(sma, 'name', 'inter_trial_interval','self_timer',ITIValue-preITItime,...
-            'output_actions', {'SchedWaveTrig','stimulus_trigger'},...
-            'input_to_statechange', {'Tup','check_next_trial_ready'});
+%         if value(punishITILick)
+            % Loads next trial stimulus and waits ITI before ending the trial
+%             sma = add_state(sma, 'name', 'inter_trial_interval','self_timer',0.3,...
+%                 'output_actions', {'SchedWaveTrig','stimulus_trigger'},...
+%                 'input_to_statechange', {'Tup','inter_trial_interval2'});
+%         else
+            % Loads next trial stimulus and waits ITI before ending the trial
+            sma = add_state(sma, 'name', 'inter_trial_interval','self_timer',ITIValue-preITItime,...
+                'output_actions', {'SchedWaveTrig','stimulus_trigger'},...
+                'input_to_statechange', {'Tup','check_next_trial_ready'});           
+%         end
+%         sma = add_state(sma, 'name', 'inter_trial_interval2','self_timer',ITIValue-preITItime-0.3,...
+%             'input_to_statechange', {lick,'punish_inter_trialinterval','Tup','check_next_trial_ready'});
+%         
+%         sma = add_state(sma, 'name', 'punish_inter_trialinterval','self_timer',0.3,...
+%             'output_actions', {'SchedWaveTrig','wrong_lick'},...
+%             'input_to_statechange', {'Tup','inter_trial_interval2'});
+%         
         
         
         %% Sends state machine to the assembler
