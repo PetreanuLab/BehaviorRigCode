@@ -47,7 +47,7 @@ switch action,
                 'MenuBar', 'none',    'NumberTitle', 'off');
         
         % Sets figure size and position
-        set(value(main_fig), 'Position', [  450    39   410   700]);
+        set(value(main_fig), 'Position', [  450    39   410   730]);
         
         % Initial position on main GUI window
         x=10; y=10;        
@@ -94,6 +94,7 @@ switch action,
         DispParam(obj, 'currSpeed', NaN, x, y); next_row(y);
         DispParam(obj, 'currDensity', NaN, x, y); next_row(y);
         DispParam(obj, 'currCoher', NaN, x, y); next_row(y);
+        DispParam(obj, 'currcueSoundLength', NaN, x, y); next_row(y);
         DispParam(obj, 'currStimSizeDeg', NaN, x, y); next_row(y);
         DispParam(obj, 'currChangeVolume', NaN, x, y); next_row(y);
         DispParam(obj, 'currChangeStimDelay', NaN, x, y); next_row(y);
@@ -180,7 +181,7 @@ switch action,
         %%%
         DeclareGlobals(obj, 'rw_args', { ...
             'currValidTrial', 'currValidLoc', 'currCoher',...
-            'currCohChg','currDirnDeltaChg','currLumFoil','currLumTarg','currLumChg','currSpeedChg'...
+            'currcueSoundLength','currCohChg','currDirnDeltaChg','currLumFoil','currLumTarg','currLumChg','currSpeedChg'...
             'currDensity','currSpeed','currSize','currLifeTime',...
             'currStimDuration','currResponseWindow','currChangeStimDelay',...
             'currChangeVolume','currStimSizeDeg','currRandSeed',...

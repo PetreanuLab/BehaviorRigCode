@@ -24,7 +24,7 @@ bquit = 0;
 global hCtr;
 persistent  data 
 persistent w rect frameRate
-persistent stimulus iLocChange bCue bPresentCue laststimulus
+persistent stimulus iLocChange bvisualCue bPresentCue laststimulus
 persistent elapsedTime lastTrigger cueTime
 persistent rewardSound noiseSound cueSound earlynoiseSound changeSnd
 persistent s1 s2
@@ -97,13 +97,13 @@ while (~bquit)
         
         if bPresentCue
             bPresentCue =0;
-            if bCue
+            play(cueSound)
+            if bvisualCue
                 Screen('FillRect',w, uint8(data.background_level),rect);
                 rad = data.stimulus(1).radius_px;
                 x0 = data.cue_centre_px(1)-rad;
                 y0 = data.cue_centre_px(2)-rad;
                 Screen('FillOval',w,255,[x0,y0,x0+2*rad,y0+2*rad]);
-                play(cueSound);
                 vblcue(1) = Screen('Flip', w);
                 
                 % % End Cue
@@ -306,17 +306,19 @@ Screen('CloseAll');
         
         s1 = RandStream('mlfg6331_64','seed',data.rand_seed);
         s2 = RandStream('mlfg6331_64','seed',0);
-        data.visual_error
+        
         % % Prepare Cue Audio
+        y =  [sin((1 : audio_freq*data.cue_sound_length)/audio_freq*2*pi*data.cue_frequency)]*data.sound_volume;
+        wavedata = zeros(2,data.cue_sound_length*audio_freq);
+        if data.cue_rightSpeaker, wavedata(2,:) =y; end
+        if data.cue_leftSpeaker, wavedata(1,:) =y; end
+        cueSound = audioplayer(wavedata,audio_freq);
+        
+        
         if data.cue_length~= 0
-            bCue = 1;
-            y =  [sin((1 : audio_freq*data.cue_length)/audio_freq*2*pi*data.cue_frequency)]*data.sound_volume;
-            wavedata = zeros(2,data.cue_length*audio_freq);
-            if data.cue_rightSpeaker, wavedata(2,:) =y; end
-            if data.cue_leftSpeaker, wavedata(1,:) =y; end
-            cueSound = audioplayer(wavedata,audio_freq);
+            bvisualCue = 1;
         else
-            bCue = 0;
+            bvisualCue = 0;
         end
         % % Perpare other sounds
         

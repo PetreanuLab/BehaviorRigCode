@@ -201,6 +201,14 @@ switch action,
                 - (value(ITIMax)+1)+0.3; % 1 is from preITI and 0.3 is for safety
             warning('earlyTimeOut is too short. Shorter than errorSoundLength or errorVisualLength, This has been corrected')
         end
+        
+        % set the cue sound length
+        if value(cueSoundFrac)==0 %use an absolute length
+            currcueSoundLength.value = getprob(cueSoundLength,cueSoundLengthProb);
+        else % or a relative fraction of the changeStimDelay
+            currcueSoundLength.value = changeStimDelay*value(cueSoundFrac);
+        end
+        
     case 'set_next_dots'
         
         if strcmp(value(randSeed),'random')
@@ -379,7 +387,9 @@ switch action,
         end
         param.stimulus(3).dot_coherence = param.stimChange_coh;
         param.stimulus(3).stim_dir = param.stimChange_dirn;
-        param.stimulus(3).lumlevel =  param.stimChange_lum ;
+        if value(useLumChg)
+            param.stimulus(3).lumlevel =  param.stimChange_lum ;
+        end
         param.stimulus(3).dot_speed_cm = tan(value(param.stimChange_speed)*pi/180)*value(distCm);
         param.stimulus(3).dot_speed_px = param.diag_px/param.diag_cm*param.stimulus(3).dot_speed_cm;
         % % other stimulus are distractors/Foils
@@ -387,6 +397,7 @@ switch action,
         %% Others
         param. validTrial       =  value(currValidTrial);
         
+        param.cue_sound_length  = value(currcueSoundLength);
         param.error_length      = value(errorVisualLength);
         param.error_lifetime    = value(flickeringError);
         param.error_sound_length = value(errorSoundLength);
