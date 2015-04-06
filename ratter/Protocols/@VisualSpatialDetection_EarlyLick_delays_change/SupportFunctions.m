@@ -18,23 +18,47 @@ switch action,
             correctHistoryLoc1(n_done_trials) = NaN;
             correctHistoryLoc2(n_done_trials) = NaN;
             earlyHistory(n_done_trials) = 0;
+            earlyHistoryLoc1(n_done_trials) = 0;
+            earlyHistoryLoc2(n_done_trials) = 0;
             missedHistory(n_done_trials) = 0;
             %             parsed_events.states
-            if ~isempty(parsed_events.states.wrong_choice)
-                correctHistory(n_done_trials) = 0;
-                if value(currValidLoc)==2
-                    correctHistoryLoc2(n_done_trials) = 0;
-                else
-                    correctHistoryLoc1(n_done_trials) = 0;
+            if  value(currValidTrial)
+                if ~isempty(parsed_events.states.correct_valid)
+                    correctHistory(n_done_trials) = 1;
+                    if value(currValidLoc)==2
+                        correctHistoryLoc2(n_done_trials) = 1;
+                    else
+                        correctHistoryLoc1(n_done_trials) = 1;
+                    end
+                elseif ~isempty(parsed_events.states.missed_response)
+                    missedHistory(n_done_trials) = 1;
+                    correctHistory(n_done_trials) = 0;
+                    if value(currValidLoc)==2
+                       correctHistoryLoc2(n_done_trials) = 0;
+                    else
+                        correctHistoryLoc1(n_done_trials) = 0;
+                    end
                 end
-                
-            elseif  ~isempty(parsed_events.states.correct_valid)|| ...
-                    ~isempty(parsed_events.states.correct_invalid)
-                correctHistory(n_done_trials) = 1;
-                if value(currValidLoc)==2
-                    correctHistoryLoc2(n_done_trials) = 1;
+            else %invalid
+                 missedHistory(n_done_trials) = NaN;
+                if ~isempty(parsed_events.states.wrong_choice)
+                    correctHistory(n_done_trials) = 0;
+                    if value(currValidLoc)==2
+                        correctHistoryLoc2(n_done_trials) = 0;
+                        correctHistoryLoc1(n_done_trials) = NaN;
+                    else
+                        correctHistoryLoc1(n_done_trials) = 0;
+                        correctHistoryLoc2(n_done_trials) = NaN;
+                    end
                 else
-                    correctHistoryLoc1(n_done_trials) = 1;
+                    correctHistory(n_done_trials) = 1;
+                    if value(currValidLoc)==2
+                        correctHistoryLoc2(n_done_trials) = 1;
+                        correctHistoryLoc1(n_done_trials) = NaN;
+                    else
+                        correctHistoryLoc1(n_done_trials) = 1;
+                        correctHistoryLoc2(n_done_trials) = NaN;
+                    end
                 end
             end
             
@@ -50,14 +74,60 @@ switch action,
                 end
             else
                 earlyHistory(n_done_trials) = NaN;
+                earlyHistoryLoc1(n_done_trials) = NaN;
+                earlyHistoryLoc2(n_done_trials) = NaN;
+            end
+            eH = value( earlyHistory);
+            if eH(end)==1
+                if value(currValidLoc)==2
+                    earlyHistoryLoc2(n_done_trials) = 1;
+                    earlyHistoryLoc1(n_done_trials) = NaN;
+                else
+                    earlyHistoryLoc1(n_done_trials) = 1;
+                    earlyHistoryLoc2(n_done_trials) = NaN;
+                end
+            else eH(end)==0
+                if value(currValidLoc)==2
+                    earlyHistoryLoc2(n_done_trials) = 0;
+                    earlyHistoryLoc1(n_done_trials) = NaN;
+                else
+                    earlyHistoryLoc1(n_done_trials) = 0;
+                    earlyHistoryLoc2(n_done_trials) = NaN;
+                end
             end
             
-            if ~isempty(parsed_events.states.missed_response)
-                missedHistory(n_done_trials) = 1;
+           
+            
+            
+            % % correction Loop
+            %         [validLoc1 validLoc2 InvalidLoc1 InvalidLoc2]
+            temp = value(currCorrLoop);
+            maxCoorLoop = [100 100 100 100];
+            indCorrLoop = 1;
+            if  value(currValidTrial)==0
+                indCorrLoop = 3;
             end
+            if value(currValidLoc)==2
+                indCorrLoop = indCorrLoop+1;
+            end
+            if correctHistory(n_done_trials)==1
+                temp(indCorrLoop) = temp(indCorrLoop)-1;
+            elseif correctHistory(n_done_trials)==0
+                temp(indCorrLoop) = temp(indCorrLoop)+1;
+            end
+            
+            
+            temp(indCorrLoop) = max(temp(indCorrLoop),0);
+            temp(indCorrLoop) = min(temp(indCorrLoop),maxCoorLoop(indCorrLoop));
+            currCorrLoop.value = temp;
+            
+            
+            % % update Adapting variables
+            
         end
         
-        % % update Adapting variables
+        
+        
         if isequal('Adapt random with max',value(randomChangeDelay))
             
             if ~isempty(earlyHistory) && ~isnan(earlyHistory(end))
@@ -122,7 +192,14 @@ switch action,
                     case 'user'
                         currValidLoc.value =  value(validLocation)+1; % turn boolean into 1 or 2
                     case 'random'
-                        currValidLoc.value =  randi(2);
+                        %                         currValidLoc.value = randi(2); % original
+                        % set the probablity that a location is valid                       
+                        if rand < value(changeLocation1)
+                            currValidLoc.value =  1;
+                        else
+                            currValidLoc.value =  2;
+                        end
+                        
                 end
                 
         end
@@ -151,7 +228,6 @@ switch action,
             end
         end
         
-        currStimDuration.value = stim_length;
         validTrial = value(currValidTrial);
         
         % % Set change delay
@@ -173,6 +249,8 @@ switch action,
         else % use specified response window
             responseWindow = value(respWindow);
         end
+        
+        currStimDuration.value = stim_length;
         currResponseWindow.value = responseWindow;
         currChangeStimDelay.value = changeStimDelay;
         
@@ -265,15 +343,17 @@ switch action,
             
             indmean = [(n_done_trials-value(meanSize)+1):n_done_trials];
             indValid = validHistory(indmean)==1;
-            indMiss = missedHistory(indmean)==1;
+%             indMiss = missedHistory(indmean)==1;
             indInValid = validHistory(indmean)==0;
             
             performance.value = nanmean( correctHistory(indmean));
             validPerf.value  =  nanmean(correctHistory(indmean(indValid)));
             invalidPerf.value=  nanmean(correctHistory(indmean(indInValid)));
-            missFrac.value=  nansum(missedHistory(indmean))/meanSize;
+            missFrac.value=  nansum(missedHistory(indmean(indValid)))/nansum(indValid);
             earlyFrac.value=  nansum(earlyHistory(indmean))/meanSize;
-            
+            earlyValidLoc1.value=  nanmean(earlyHistoryLoc1(indmean));
+            earlyValidLoc2.value=  nanmean(earlyHistoryLoc2(indmean));
+
             performanceLoc1.value =  nanmean( correctHistoryLoc1(indmean));
             performanceLoc2.value = nanmean( correctHistoryLoc2(indmean));
             
@@ -379,6 +459,11 @@ switch action,
         param.stimChange_speed =   value(currSpeedChg);
         param.stimChange_lum =   value(currLumChg);
         
+        if  ~value(currValidTrial);
+            param.bstimulusChanges = value(stimlusChangeProb);
+        else
+            param.bstimulusChanges = 1;
+        end
         
         if  value(currValidTrial);
             param.stimulus(3) = param.stimulus(1);
@@ -396,7 +481,7 @@ switch action,
         
         %% Others
         param. validTrial       =  value(currValidTrial);
-        
+        param.cue_sound_volume  = value(cueSoundVolume);
         param.cue_sound_length  = value(currcueSoundLength);
         param.error_length      = value(errorVisualLength);
         param.error_lifetime    = value(flickeringError);
@@ -410,6 +495,7 @@ switch action,
         param.after_lick        = value(outDelay);
         param.stop_stimulus     = value(stopLick);
         param.visual_error      = value(visualError);
+        param.brewardWitholding  = value(rewardWitholding);
         
         save(fullfile(r.DIR.ratter, 'next_trial'),'param');
         

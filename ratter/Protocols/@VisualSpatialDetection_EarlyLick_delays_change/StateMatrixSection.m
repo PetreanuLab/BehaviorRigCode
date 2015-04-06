@@ -45,7 +45,7 @@ switch action
         punishEarlyLicksWindow  =changeStimDelay - earlyLickGracePeriod;
         if punishEarlyLicksWindow <0
             warning('changeStimDelay must be longer than earlyLickGracePeriod. Fixed')
-            earlyLickGracePeriod.value = changeStimDelay;
+            earlyLickGracePeriod = changeStimDelay;
             punishEarlyLicksWindow = 0.001;
         end
         
@@ -63,10 +63,10 @@ switch action
             'DOut',toolboxtrig);
         sma = add_scheduled_wave(sma,'name','correct_lick',... % 2 lick detected
             'preamble',0.001,'sustain',0.001,        ...
-            'trigger_on_up', 'correct_timer','untrigger_on_down','cue_stimulus_timer +cue_stimulus_EARLY_LICKS_timer','DOut',toolboxtrig); 
+            'trigger_on_up', 'correct_timer','DOut',toolboxtrig); 
         sma = add_scheduled_wave(sma,'name','wrong_lick',... % 2 lick detected
             'preamble',0.001,'sustain',0.001,...
-            'trigger_on_up', 'wrong_timer','untrigger_on_down','cue_stimulus_timer +cue_stimulus_EARLY_LICKS_timer','DOut',toolboxtrig); 
+            'trigger_on_up', 'wrong_timer','DOut',toolboxtrig); 
         sma = add_scheduled_wave(sma,'name','correct_timer',...
             'preamble',0.050,...% this duration is decoded by the stimulus computer 
             'trigger_on_up', 'pulse');
@@ -80,7 +80,7 @@ switch action
             'preamble',0.050,... % this duration is decoded by the stimulus computer 
             'trigger_on_up', 'pulse');
         sma = add_scheduled_wave(sma,'name','stop_stim_wave',...  % stop the visual stim program as change the stim
-            'preamble',0.001,'sustain',0.001,'untrigger_on_down','cue_stimulus_timer +cue_stimulus_EARLY_LICKS_timer',...
+            'preamble',0.001,'sustain',0.001,...
             'trigger_on_up', 'stop_stim_timer','DOut',toolboxtrig);
         sma = add_scheduled_wave(sma,'name','stop_stim_timer',... % helper to stop the visual stim (send the 2nd pulse)
             'preamble',0.2,... % this duration is decoded by the stimulus computer 
@@ -93,19 +93,12 @@ switch action
         
         % Stop trial
         
-        sma = add_scheduled_wave(sma,'name','cue_stimulus_timer',... % the  length of the visual stimulus without the preCue
-            'preamble',trial_length-value(preCue),'sustain',0.001,...
-            'trigger_on_up','stop_stim_wave' );
         sma = add_scheduled_wave(sma,'name','cue_stimulus_No_trigger',... % this timer is used to time the length of the stimulus but doesn't trigger visual PC
             'preamble',trial_length-value(preCue),'sustain',0.001);
         sma = add_scheduled_wave(sma,'name','trial_timer',...
             'preamble',trial_length,'sustain',0.001);
-        sma = add_scheduled_wave(sma,'name','cue_stimulus_EARLY_LICKS_timer',... % this timer is started after earlylicks delays the trial
-            'preamble',trial_length-value(preCue) -(earlyLickGracePeriod + value(cueDuration)+value(stimDelay)),'sustain',0.001,...
-            'trigger_on_up','stop_stim_wave' );
         sma = add_scheduled_wave(sma,'name','trial_EARLY_LICKS_timer',... % this timer is started after earlylicks delays the trial
             'preamble',trial_length-(earlyLickGracePeriod + value(cueDuration)+value(stimDelay)),'sustain',0.001);
-        % BA %%%%%%%%%%%%% DO THESE schedule wave need to be turned off?
         
         % Reward delivery
         sma = add_scheduled_wave(sma,'name','reward_delivery',...
@@ -247,14 +240,14 @@ switch action
         % % CUE presentation state  % make a different state for cueInvalid so it is easy to see on the pokes plot
         if validTrial
             sma = add_state(sma, 'name', 'cue','self_timer', value(cueDuration),...
-                'output_actions', {'SchedWaveTrig','stimulus_trigger+cue_stimulus_timer+cue_stimulus_No_trigger'},...
+                'output_actions', {'SchedWaveTrig','stimulus_trigger+cue_stimulus_No_trigger'},...
                 'input_to_statechange', {'Tup', 'stimulus_delay'});
             % DUMMY STATE
             sma = add_state(sma, 'name', 'cueInvalid','self_timer', 0.001,'input_to_statechange', {'Tup', 'stimulus_delay'});
             
         else
             sma = add_state(sma, 'name', 'cue','self_timer', 0.001,...
-                'output_actions', {'SchedWaveTrig','stimulus_trigger+cue_stimulus_timer+cue_stimulus_No_trigger'},...
+                'output_actions', {'SchedWaveTrig','stimulus_trigger+cue_stimulus_No_trigger'},...
                 'input_to_statechange', {'Tup', 'cueInvalid'});
             sma = add_state(sma, 'name', 'cueInvalid','self_timer', value(cueDuration),...
                 'input_to_statechange', {'Tup', 'stimulus_delay'});
@@ -284,7 +277,7 @@ switch action
                     % STOP the stimulus & trial_timer it isn't relavant anymore
                     % because trial has been delayed by licking
                     sma = add_state(sma, 'name', 'early_licks_stimulus_delayed1','self_timer', 0.001 ,...
-                        'output_actions', {'SchedWaveTrig','-trial_timer -cue_stimulus_timer -cue_stimulus_EARLY_LICKS_timer -trial_EARLY_LICKS_timer'},...
+                        'output_actions', {'SchedWaveTrig','-trial_timer   -trial_EARLY_LICKS_timer'},...
                         'input_to_statechange', {'Tup', 'early_licks_stimulus_delayed2'});
                     % START a new trial_timer_early_licks
                     sma = add_state(sma, 'name', 'early_licks_stimulus_delayed2','self_timer', 0.3 ,...
@@ -292,7 +285,7 @@ switch action
                         'input_to_statechange', {'Tup', 'early_licks_stimulus_delayed3'});
                     
                     sma = add_state(sma, 'name', 'early_licks_stimulus_delayed3','self_timer', 0.001 ,...
-                        'output_actions', {'SchedWaveTrig','cue_stimulus_EARLY_LICKS_timer +trial_EARLY_LICKS_timer'},...
+                        'output_actions', {'SchedWaveTrig','  +trial_EARLY_LICKS_timer'},...
                         'input_to_statechange', {'Tup', 'punish_early_licks'});
                     % In case animals can lick during the delay period
             end
@@ -323,45 +316,66 @@ switch action
         else
             if  value(rewardWitholding)                 % In case we reward the animals for WITHOLDING
                 sma = add_state(sma, 'name', 'response_window','self_timer', responseWindow,...
-                    'input_to_statechange', {lick,'wrong_choice','Tup', 'correct_invalid'});
+                    'input_to_statechange', {lick,'wrong_choice','Tup', 'stimulus_off_invalid'});
+                sma = add_state(sma, 'name', 'stimulus_off_invalid','self_timer', 0.001 ,... % leave the stimulus on for 1-2 secs
+                    'output_actions', {'SchedWaveTrig','stop_stim_wave'},...
+                    'input_to_statechange', {'Tup', 'correct_invalid'});
+                
             else
                 sma = add_state(sma, 'name', 'response_window','self_timer', responseWindow,...
-                    'input_to_statechange', {lick,'wrong_choice','Tup', 'pre_iti'});
+                    'input_to_statechange', {lick,'wrong_choice','Tup', 'stimulus_off_invalid'});
+                sma = add_state(sma, 'name', 'stimulus_off_invalid','self_timer', 0.001 ,... % leave the stimulus on for 1-2 secs
+                    'output_actions', {'SchedWaveTrig','stop_stim_wave'},...
+                    'input_to_statechange', {'Tup', 'pre_iti'});
             end
             
         end
         
         % Time out state
         if value(setRespWindow)
-            sma = add_state(sma, 'name', 'missed_response','self_timer', 10,...
-                'input_to_statechange', {'cue_stimulus_timer_In', 'pre_iti', 'cue_stimulus_EARLY_LICKS_timer_In', 'pre_iti', 'Tup', 'pre_iti'});
+            sma = add_state(sma, 'name', 'missed_response','self_timer', 0.001,...
+                'input_to_statechange', { 'Tup', 'missed_stimulus_off'});
+            
         else
             % Checks animal licks and rewards or goes to time out
             sma = add_state(sma, 'name', 'missed_response','self_timer', 0.001,...
+                 'output_actions', {'SchedWaveTrig','stop_stim_wave'},...
+                'input_to_statechange', {'Tup', 'pre_iti'});
+        end
+        
+        sma = add_state(sma, 'name', 'missed_stimulus_off','self_timer', trial_length/2,... % 
+            'output_actions', {'SchedWaveTrig','stop_stim_wave'},...
+            'input_to_statechange', {'trial_timer_In', 'pre_iti',...
+            'trial_EARLY_LICKS_timer_In', 'pre_iti','Tup', 'pre_iti'});
+        
+        % Correct choice state
+        % Opens valve, informs toolbox and waits trial duration before going to ITI
+        sma = add_state(sma, 'name', 'correct_valid','self_timer', value(outDelay),... % to keep stimulus increase the length of this state
+            'input_to_statechange', {'Tup', 'reward_state'});
+        
+        preStimulusOffTime =  1 + rand*0.5; % for training so that stimulus doesnt go off immediately with the lick
+        sma = add_state(sma, 'name', 'reward_state','self_timer', 0.001,...
+            'output_actions', {'SchedWaveTrig','reward_delivery+correct_lick'},...
+            'input_to_statechange', {'Tup', 'pre_stimulus_off'});
+       sma = add_state(sma, 'name', 'pre_stimulus_off','self_timer',preStimulusOffTime,... % NOTE this changes the stimulus off time for correct trials
+            'input_to_statechange', {'Tup', 'valid_stimulus_off'});
+        
+       
+        if 1 %  Use trial time, don't allow corrects to speed up trials
+            sma = add_state(sma, 'name', 'valid_stimulus_off','self_timer', trial_length ,... % leave the stimulus on for 1-2 secs
+                'output_actions', {'SchedWaveTrig','stop_stim_wave'},...
+                'input_to_statechange', {'trial_timer_In', 'pre_iti',...
+                'trial_EARLY_LICKS_timer_In', 'pre_iti','Tup', 'pre_iti'});
+            
+        else
+            sma = add_state(sma, 'name', 'valid_stimulus_off','self_timer', 0.001 ,... %
+                'output_actions', {'SchedWaveTrig','stop_stim_wave'},...
                 'input_to_statechange', {'Tup', 'pre_iti'});
         end
         
         % Correct choice state
         % Opens valve, informs toolbox and waits trial duration before going to ITI
-        sma = add_state(sma, 'name', 'correct_valid','self_timer', value(outDelay),... % to keep stimulus increase the length of this state
-            'output_actions', {'SchedWaveTrig' '-cue_stimulus_timer -cue_stimulus_EARLY_LICKS_timer'},...
-            'input_to_statechange', {'Tup', 'reward_state'});
-        
-        sma = add_state(sma, 'name', 'reward_state','self_timer', 0.001,...
-            'output_actions', {'SchedWaveTrig','reward_delivery+correct_lick'},...
-            'input_to_statechange', {'Tup', 'pre_stimulus_off'});
-       sma = add_state(sma, 'name', 'pre_stimulus_off','self_timer', 1 + rand*0.5,... % NOTE this changes the stimulus off time for correct trials
-            'input_to_statechange', {'Tup', 'stimulus_off'});
-        
-        sma = add_state(sma, 'name', 'stimulus_off','self_timer', 0.001 ,... % leave the stimulus on for 1-2 secs
-            'output_actions', {'SchedWaveTrig','stop_stim_wave'},...
-            'input_to_statechange', {'Tup', 'pre_iti'});
-        
-        
-        % Correct choice state
-        % Opens valve, informs toolbox and waits trial duration before going to ITI
         sma = add_state(sma, 'name', 'correct_invalid','self_timer', value(outDelay),...
-            'output_actions', {'SchedWaveTrig' '-cue_stimulus_timer -cue_stimulus_EARLY_LICKS_timer'},...
             'input_to_statechange', {'Tup', 'reward_state_invalid'});
         
         sma = add_state(sma, 'name', 'reward_state_invalid','self_timer', 0.001,...
@@ -391,16 +405,15 @@ switch action
         
         % Early  choice state
         sma = add_state(sma, 'name', 'early_choice','self_timer', 0.001,...
-                          'output_actions', {'SchedWaveTrig' 'wrong_lick' },... 
-             'input_to_statechange', {'cue_stimulus_No_trigger_In', 'early_choice_timeout'});
-       sma = add_state(sma, 'name', 'early_choice_timeout','self_timer', max(value(earlyTimeOut),0.001),...
-             'input_to_statechange', {'Tup', 'pre_iti'});
-%                'output_actions', {'SchedWaveTrig' 'stop_stim_wave' },...
-      % This State gives time for the stimulus information to be computed before the
+            'output_actions', {'SchedWaveTrig' 'wrong_lick' },...
+            'input_to_statechange', {'cue_stimulus_No_trigger_In', 'early_choice_timeout'});
+        sma = add_state(sma, 'name', 'early_choice_timeout','self_timer', max(value(earlyTimeOut),0.001),...
+            'input_to_statechange', {'Tup', 'pre_iti'});
+        %                'output_actions', {'SchedWaveTrig' 'stop_stim_wave' },...
+        % This State gives time for the stimulus information to be computed before the
         % StimulusPresntation program is called by thenext trigger
         preITItime =1;
         sma = add_state(sma, 'name', 'pre_iti','self_timer',preITItime,...
-            'output_actions', {'SchedWaveTrig' '-cue_stimulus_timer -cue_stimulus_EARLY_LICKS_timer'},... % BA shouldn't be necessary?
             'input_to_statechange', {'Tup','inter_trial_interval'});
         
         % Inter trial interval state

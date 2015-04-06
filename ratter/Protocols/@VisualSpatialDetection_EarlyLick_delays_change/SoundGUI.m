@@ -32,13 +32,14 @@ switch action
         NumeditParam(obj, 'cueSoundLength', [1 0 0 0 0], x, y, 'TooltipString', ' cue length ');next_row(y);
         NumeditParam(obj, 'cueSoundLengthProb', [1 0 0 0 0], x, y, 'TooltipString', ' cue length probabilities');next_row(y);
         NumeditParam(obj, 'cueSoundFrac', 1, x, y,'TooltipString', 'fraction of change time that cue sound should be on, set to 0 to use cue length'); next_row(y);
+        SliderParam(obj, 'cueSoundVolume', 0.5, 0,10, x, y, 'TooltipString', 'cue sound volume');next_row(y)
         SliderParam(obj, 'errorSoundVolume', 3, 0,10, x, y, 'TooltipString', 'Error sound volume');next_row(y)
         SliderParam(obj, 'soundVolume', 5, 0, 10, x, y, 'TooltipString', 'Sound volume');next_row(y);
         ToggleParam(obj, 'soundTrial', 1, x, y); next_row(y);
         %SubheaderParam(obj, 'soundHeader', 'Sound Parameters', x, y); next_row(y,1.5);
         
         DeclareGlobals(obj, 'rw_args', {'cue1Frequency', 'cue2Frequency',...
-            'changeSoundVolume','changeSoundVolumeProb','errorSoundVolume','cueSoundFrac','cueSoundLengthProb','cueSoundLength'...
+            'changeSoundVolume','changeSoundVolumeProb','cueSoundVolume','errorSoundVolume','cueSoundFrac','cueSoundLengthProb','cueSoundLength'...
             'soundTrial','soundVolume'});
         
         

@@ -19,12 +19,13 @@ bpunish = 0;
 bearlypunish = 0;
 boutCome = 0;
 bstopStimulus = 0;
+bstimChanged = 0;
 bquit = 0;
 % ev.time = [];ev.thiscounter = [];ev.counterName= [];
 global hCtr;
 persistent  data 
 persistent w rect frameRate
-persistent stimulus iLocChange bvisualCue bPresentCue laststimulus
+persistent stimulus iLocChange bvisualCue bsoundCue bPresentCue laststimulus
 persistent elapsedTime lastTrigger cueTime
 persistent rewardSound noiseSound cueSound earlynoiseSound changeSnd
 persistent s1 s2
@@ -83,6 +84,15 @@ while (~bquit)
     
     try
         if bstopStimulus % reset stimulus
+            
+            if bstimChanged  % play reward sound at the end of the stimulus 
+                if ~data.validTrial & data.brewardWitholding
+                     if data.trial_sounds
+                        disp('play reward tone');
+                        play(rewardSound);
+                     end
+                end
+            end
             bstopStimulus = 0;
             % see counter 5 for explaination of this dead period
             if hCtr.isTaskDone
@@ -97,7 +107,9 @@ while (~bquit)
         
         if bPresentCue
             bPresentCue =0;
-            play(cueSound)
+            if bsoundCue
+                play(cueSound)
+            end
             if bvisualCue
                 Screen('FillRect',w, uint8(data.background_level),rect);
                 rad = data.stimulus(1).radius_px;
@@ -124,10 +136,21 @@ while (~bquit)
             for iLoc = 1:2
                 
                 % Moves dots
+                
+                if  any(size(stimulus(iLoc).dotCentre )~= size(stimulus(iLoc).dotDirection)) % catch the case where the number of dots changes
+                    ndots = min(size(stimulus(iLoc).dotCentre,2),size(stimulus(iLoc).dotDirection,2))
+%                     stimulus(iLoc).dotCentrePolar = [rand(s1,1,data.stimulus(iLoc).dot_number)*2*pi-pi;...
+%                         sqrt(rand(s1,1,data.stimulus(iLoc).dot_number))*data.stimulus(iLoc).radius_px];
+%                     stimulus(iLoc).dotCentre = stimulus(iLoc).dotCentre(:,1:ndots);
+%                     stimulus(iLoc).dotDirection = stimulus(iLoc).dotDirection(:,1:ndots);
+%                     stimulus(iLoc).dotRem = stimulus(iLoc).dotRem(:,1:ndots);
+                end
                 stimulus(iLoc).dotCentre = stimulus(iLoc).dotCentre + stimulus(iLoc).dotDirection;
                 
                 % Converts updated dots positions to polar coordinates
                 stimulus(iLoc).dotCentrePolar = [atan2(stimulus(iLoc).dotCentre(2,:),stimulus(iLoc).dotCentre(1,:)); sqrt(stimulus(iLoc).dotCentre(1,:).^2 + stimulus(iLoc).dotCentre(2,:).^2)];
+%                 size( stimulus(iLoc).dotCentrePolar)
+%                 size(stimulus(iLoc).dotCentre)
                 
                 % Redraws the position of dead dots
                 i = round(startStimTime-GetSecs()/frameRate);
@@ -137,7 +160,7 @@ while (~bquit)
                     sqrt(rand(s1,1,sum( stimulus(iLoc).dotRem==frameRem)))*data.stimulus(iLoc).radius_px];
                 
                 % Detects whether a border was reached
-                stimulus(iLoc).dotCentrePolar(1, stimulus(iLoc).dotCentrePolar(2,:) > data.stimulus(iLoc).radius_px*1.2) = stimulus(iLoc).dotCentrePolar(1, stimulus(iLoc).dotCentrePolar(2,:) > data.stimulus(iLoc).radius_px*1.2)+pi;
+                stimulus(iLoc).dotCentrePolar(1, stimulus(iLoc).dotCentrePolar(2,:) > data.stimulus(iLoc).radius_px*1) = stimulus(iLoc).dotCentrePolar(1, stimulus(iLoc).dotCentrePolar(2,:) > data.stimulus(iLoc).radius_px*1)+pi;
             end
         end
         
@@ -241,6 +264,7 @@ Screen('CloseAll');
                 case 0
                     bpunish = 0;
                     counter = 1;
+                    bstimChanged = 0;
                     counterName = 'Prepare Stimulus';
                     PrepareStimulusAndCue();
                     stop(hCtr);
@@ -308,12 +332,16 @@ Screen('CloseAll');
         s2 = RandStream('mlfg6331_64','seed',0);
         
         % % Prepare Cue Audio
-        y =  [sin((1 : audio_freq*data.cue_sound_length)/audio_freq*2*pi*data.cue_frequency)]*data.sound_volume;
-        wavedata = zeros(2,data.cue_sound_length*audio_freq);
-        if data.cue_rightSpeaker, wavedata(2,:) =y; end
-        if data.cue_leftSpeaker, wavedata(1,:) =y; end
-        cueSound = audioplayer(wavedata,audio_freq);
-        
+        if data.cue_sound_length
+            bsoundCue = 1;
+            y =  [sin((1 : audio_freq*data.cue_sound_length)/audio_freq*2*pi*data.cue_frequency)]*data.cue_sound_volume;
+            wavedata = zeros(2,data.cue_sound_length*audio_freq);
+            if data.cue_rightSpeaker, wavedata(2,:) =y; end
+            if data.cue_leftSpeaker, wavedata(1,:) =y; end
+            cueSound = audioplayer(wavedata,audio_freq);
+        else
+            bsoundCue = 0;
+        end
         
         if data.cue_length~= 0
             bvisualCue = 1;
@@ -322,11 +350,11 @@ Screen('CloseAll');
         end
         % % Perpare other sounds
         
-        rewardFreq = 2*pi*1000
+        rewardFreq = 2*pi*1000;
         rewardSound = audioplayer(sin((1:audio_freq*(data.reward_sound_length))/audio_freq*rewardFreq)*(data.sound_volume),audio_freq);
         
         noiseSound = audioplayer((rand(s2,audio_freq*(data.error_sound_length),1) - 0.5)*(data.error_sound_volume),audio_freq);
-        early_noise_length = 0.3;
+        early_noise_length = 1;
         earlynoiseSound = audioplayer((rand(s2,audio_freq*(early_noise_length),1) - 0.5)*(data.error_sound_volume),audio_freq);
         change_sound_length = 0.1;
         changeFreq = rewardFreq*2.2;
@@ -334,6 +362,7 @@ Screen('CloseAll');
         
         % % Stimulus
         % % Prepare Dots
+%         clear stimulus
         for iLoc = 1:3 % NOTE iLoc 1 is always the valid location, iLoc 3 is the changed stimulus
             % Dots speed
             dotSpeedPerFrame = data.stimulus(iLoc).dot_speed_px/frameRate;
@@ -374,12 +403,15 @@ Screen('CloseAll');
             % Maybe include permutation of dotDirection so that the
             % order of position reset is randomized over the different
             % directions
-            stimulus(iLoc).dotRem = rem(1:data.stimulus(iLoc).dot_number,data.stimulus(iLoc).dot_lifetime);
-            
+            if isfield(stimulus(iLoc),'dotCentre') % only reset when there is a change in the number of dots
+                if size(stimulus(iLoc).dotCentre,2) ~= size(stimulus(iLoc).dotDirection,2) 
+                    stimulus(iLoc).dotRem = rem(1:data.stimulus(iLoc).dot_number,data.stimulus(iLoc).dot_lifetime);
+                    stimulus(iLoc).dotCentre = [cos(stimulus(iLoc).dotCentrePolar(1,:)).*stimulus(iLoc).dotCentrePolar(2,:); sin(stimulus(iLoc).dotCentrePolar(1,:)).*stimulus(iLoc).dotCentrePolar(2,:)];
+                end
+            end
         end
         
         % Which Stimulus Location is changing
-        data.validTrial
         if data.validTrial
             iLocChange = 1;
         else
@@ -394,12 +426,16 @@ Screen('CloseAll');
         
     end
     function changeStim()
-        laststimulus.dotDirection = stimulus(iLocChange).dotDirection;
-        laststimulus.lumlevel = stimulus(iLocChange).lumlevel;
-        stimulus(iLocChange).dotDirection =  stimulus(3).dotDirection;
-        stimulus(iLocChange).lumlevel = stimulus(3).lumlevel;
-        % add sound here, or flag to play sound
-        play(changeSnd);
+        bstimChanged = 1;
+        if data.bstimulusChanges
+            disp('really changed')
+            laststimulus.dotDirection = stimulus(iLocChange).dotDirection;
+            laststimulus.lumlevel = stimulus(iLocChange).lumlevel;
+            stimulus(iLocChange).dotDirection =  stimulus(3).dotDirection;
+            stimulus(iLocChange).lumlevel = stimulus(3).lumlevel;
+            % add sound here, or flag to play sound
+            play(changeSnd);
+        end
     end
     function resetStimulus()        
         stimulus(iLocChange).dotDirection =laststimulus.dotDirection;
