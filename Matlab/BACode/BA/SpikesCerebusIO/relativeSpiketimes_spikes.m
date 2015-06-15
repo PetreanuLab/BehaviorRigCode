@@ -1,5 +1,6 @@
-function [spikeTimeRelativeToEvent trials  spikeCountPerTrial spikes] = relativeSpiketimes_spikes(spikes,alignEvent,WOI,options)
-% function [spikeTimeRelativeToEvent trials spikes spikeCountPerTrial] = relativeSpiketimes_spikes(spikes,alignEvent,WOI,options)
+function [spikeTimeRelativeToEvent trials  spikeCountPerTrial spikes absoluteTrials] ...
+    = relativeSpiketimes_spikes(spikes,alignEvent,WOI,options)
+% function [spikeTimeRelativeToEvent trials spikes spikeCountPerTrial absoluteTrials (UNTESTED)] = relativeSpiketimes_spikes(spikes,alignEvent,WOI,options)
 
 % BA
 % crucial function for getting spiketimes relative to an event 
@@ -45,6 +46,7 @@ these_sweeps = spikes.sweeps;
 
 spikeTimeRelativeToEvent = [];
 trials = [];
+absoluteTrials = [];
 spikeCountPerTrial = [];
 ntrials = min(these_sweeps.nTrialsAvailEphysAndBehavior,these_sweeps.ntrials);
 
@@ -62,11 +64,13 @@ for itrial = 1:ntrials
     if ~any(spikeIndex)
         spikeTimeRelativeToEvent(end+1) = NaN;
         trials(end+1) = itrial;
+        absoluteTrials(end+1) = these_sweeps.absolute_trial(itrial); % UNTESTED!!!!
         spikeCountPerTrial(end+1) = 0;
     else
         spikeTimeRelativeToEvent = [spikeTimeRelativeToEvent spikes.spiketimes(spikeIndex) - eventTimeEphys];
         spikeCountPerTrial(end+1) = sum(spikeIndex);
-        trials = [trials itrial*ones(1,spikeCountPerTrial(end))];
+        trials = [trials itrial*ones(1,spikeCountPerTrial(end))]; 
+        absoluteTrials = [absoluteTrials these_sweeps.absolute_trial(itrial)*ones(1,spikeCountPerTrial(end))]; % UNTESTED!!!!
         if nargout> 3
             spikes.(slabel)(spikeIndex) = spikes.spiketimes(spikeIndex) - eventTimeEphys;
             spikes.(slabeltrial)(spikeIndex) = itrial;
@@ -80,4 +84,5 @@ spikes.sweeps.(sweepsField) = spikeCountPerTrial;
 end
 spikeTimeRelativeToEvent= spikeTimeRelativeToEvent';
 trials = trials';
+absoluteTrials = absoluteTrials';
 spikeCountPerTrial = spikeCountPerTrial';

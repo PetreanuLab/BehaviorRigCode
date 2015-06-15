@@ -17,29 +17,25 @@ switch action
         SoloParamHandle(obj, 'trial_fig', 'saveable', 0); trial_fig.value = figure;
                 name = 'Trial Settings';
         set(value(trial_fig), 'Name', name, 'Tag', name, ...
-            'Position', [451    38   215   260], 'Visible', 'off',...
+            'Position', [1096         673         215         155], 'Visible', 'off',...
                     'MenuBar', 'none',    'NumberTitle', 'off',...    
             'closerequestfcn', ['TrialGUI(' class(obj) ',''hide'')']);
-          
+        
         x=10; y=10;
         
         % ----------------------  Trial Parameters -----------------------
         % Trial menu
         ToggleParam(obj, 'treadmillStim', 0, x, y); next_row(y);
         ToggleParam(obj, 'stopLick',0,x,y); next_row(y);
-        ToggleParam(obj, 'punishITILick', 0, x, y,'TooltipString', 'UNUSED'); next_row(y);
         ToggleParam(obj, 'punishEarlyLick', 0, x, y); next_row(y);
-        ToggleParam(obj, 'punishEarlyLkNoise', 0, x, y); next_row(y);
-        MenuParam(obj, 'punishEarlyLickType', {'end_the_trial', 'delay_stim_change'},'end_the_trial', x, y,'TooltipString', 'only active is punishEarlyLick is toggled');next_row(y);
-        ToggleParam(obj, 'rewardWitholding', 0, x, y); next_row(y);
         ToggleParam(obj, 'resetITI', 0, x, y); next_row(y);
         ToggleParam(obj, 'punishError', 0, x, y); next_row(y);
-        ToggleParam(obj, 'freeWaterAtChange', 0, x, y); next_row(y);
-        ToggleParam(obj, 'freeWaterInValid', 0, x, y); next_row(y);
         ToggleParam(obj, 'visualError', 0, x, y); next_row(y);
+        ToggleParam(obj, 'noLick',0,x,y);next_row(y);
         %SubheaderParam(obj, 'trialHeader', 'Trial Settings', x, y); next_row(y,1.5);
-        DeclareGlobals(obj, 'rw_args', {'freeWaterInValid','punishError','rewardWitholding','resetITI',...
-            'punishITILick','punishEarlyLick','punishEarlyLkNoise','punishEarlyLickType','stopLick','treadmillStim','visualError','freeWaterAtChange'});
+        
+        DeclareGlobals(obj, 'rw_args', {'punishError','resetITI','noLick'...
+            'punishEarlyLick','stopLick','treadmillStim','visualError'});
         
         
     %% CASE show

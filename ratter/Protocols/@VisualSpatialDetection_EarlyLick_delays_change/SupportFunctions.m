@@ -244,7 +244,9 @@ switch action,
         end
         
         % % Sets the responseWindow
-        if or(and(not(value(setRespWindow)),validTrial),not(validTrial)) % responseWindow until the end of the Stimulus
+        if (~value(setRespWindow)& validTrial)||...
+                 (~value(setRespWindowInV)& ~validTrial)
+                % responseWindow until the end of the Stimulus
             responseWindow = stim_length - changeStimDelay;
         else % use specified response window
             responseWindow = value(respWindow);
@@ -342,9 +344,9 @@ switch action,
         if n_done_trials > value(meanSize)
             
             indmean = [(n_done_trials-value(meanSize)+1):n_done_trials];
-            indValid = validHistory(indmean)==1;
+            indValid = validHistory(indmean)==1&earlyHistory(indmean)==0;
 %             indMiss = missedHistory(indmean)==1;
-            indInValid = validHistory(indmean)==0;
+            indInValid = validHistory(indmean)==0&earlyHistory(indmean)==0;
             
             performance.value = nanmean( correctHistory(indmean));
             validPerf.value  =  nanmean(correctHistory(indmean(indValid)));
@@ -480,7 +482,12 @@ switch action,
         % % other stimulus are distractors/Foils
         
         %% Others
+        
+        
         param. validTrial       =  value(currValidTrial);
+        cueSizeDeg = 60;
+        param. cue_radius_cm    = tan(cueSizeDeg/2*pi/180)*value(distCm);
+        param. cue_radius_px    = round(param.diag_px/param.diag_cm*param.cue_radius_cm); 
         param.cue_sound_volume  = value(cueSoundVolume);
         param.cue_sound_length  = value(currcueSoundLength);
         param.error_length      = value(errorVisualLength);
@@ -496,7 +503,7 @@ switch action,
         param.stop_stimulus     = value(stopLick);
         param.visual_error      = value(visualError);
         param.brewardWitholding  = value(rewardWitholding);
-        
+        param.rewardWitholdingDelay = value(rwdWithDelay); % delay after stimulus off and before reward tone
         save(fullfile(r.DIR.ratter, 'next_trial'),'param');
         
     otherwise,

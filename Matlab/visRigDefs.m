@@ -18,6 +18,7 @@ switch(sconfig)
         r.DIR.ratterProtocols = fullfile(r.DIR.ratter,'Protocols'); % NOTE MUST BE MANUALLY SET THE SAME as Settings_Custom.conf
         r.visualScreen.ID = 1; % this is the ID that windows identifies the screen used for stimulus presentation (Right click on desktop, click screen resolution, click identify)
         r.DIR.BStruct = '/Volumes/BassamHome/GoogleDriveChampalimaud/PetreanuLab/Data/ratter/Bstruct';
+        r.DIR.DailyFig = '/Volumes/BassamHome/GoogleDriveChampalimaud/PetreanuLab/Data/ratter/DailyFig';
     otherwise % default
         r.ratterDefault.USER = 'BVA';
         r.DIR.psychtoolbox = 'C:\psychophysicsToolBox\Psychtoolbox';

@@ -25,11 +25,21 @@ dp.ChoiceCorrectInvalid= NaN(num_trials, 1)';
 dp.Premature =  NaN(num_trials, 1)';
 dp.ChoiceMissed = NaN(num_trials, 1)';
 
-dp.isValid = saved.SetGUI_validHistory(1:num_trials);
+dp.isValid = saved.SetGUI_validHistory(1:num_trials); % =1 valid 0 invalid
 dp.validLocation = saved.SetGUI_validLocHistory(1:num_trials); % the stimulus location number that is valid
 dp.punishEarlyLick =  cell2mat(saved_history.TrialGUI_punishEarlyLick(1:num_trials))';
 dp.punishError =  cell2mat(saved_history.TrialGUI_punishError(1:num_trials))';
 dp.rewardWitholding =  cell2mat(saved_history.TrialGUI_rewardWitholding(1:num_trials))';
+dp.freeWaterAtChange =  cell2mat(saved_history.TrialGUI_freeWaterAtChange(1:num_trials))';
+dp.isRandom = ismember(saved_history.StimulusGUI_validTrialSelection(1:num_trials),'random')';
+dp.probValid = cell2mat(saved_history.StimulusGUI_validTrialProb(1:num_trials))';
+dp.probChangeLocation = cell2mat(saved_history.StimulusGUI_changeLocation1(1:num_trials))';
+dp.noChangeInvalid = cell2mat(saved_history.StimulusGUI_stimlusChangeProb(1:num_trials))';
+dp.changeLocation =  NaN(num_trials, 1)';
+dp.changeLocation(dp.validLocation==1 & dp.isValid==1) = 1; % the stimulus location number that is valid
+dp.changeLocation(dp.validLocation==1 & dp.isValid==0) = 2; % the stimulus location number that is valid
+dp.changeLocation(dp.validLocation==2 & dp.isValid==2) = 2; % the stimulus location number that is valid
+dp.changeLocation(dp.validLocation==2 & dp.isValid==0) = 1; % the stimulus location number that is valid
 
 % for compatiblity
 dp.controlLoop = NaN(num_trials, 1)';
@@ -79,8 +89,9 @@ for trial_num = 1:num_trials
     
     % valid or invalid only makes sense after the stimulus change
     if ~isempty(parsed_events.states.response_window)
-        if dp.isValid(trial_num)
+        if dp.isValid(trial_num)==1
             dp.ChoiceCorrectValid(trial_num) = 0;
+            dp.ChoiceMissed(trial_num) = 0;
         else
             dp.ChoiceCorrectInvalid(trial_num) = 0;
         end
@@ -94,10 +105,10 @@ for trial_num = 1:num_trials
         elseif ~isempty(parsed_events.states.missed_response)% this can only happen on valid trials
             dp.ChoiceMissed(trial_num) = 1;
         end
-        if   dp.punishEarlyLick(trial_num) && dp.punishError(trial_num) % premature is only defined when early licks are punished
+        if   dp.punishEarlyLick(trial_num)  % premature is only defined when early licks are punished
             dp.Premature(trial_num) = 0;
         end
-    elseif   dp.punishEarlyLick(trial_num) && dp.punishError(trial_num)
+    elseif   dp.punishEarlyLick(trial_num) 
         dp.Premature(trial_num) = 1;
     end
     
@@ -107,4 +118,10 @@ for trial_num = 1:num_trials
     
 end; %end trial for-loop
 
+dp.isValid(dp.Premature==1) = nan;
+dp.ChoiceCorrect(dp.Premature==1|(dp.freeWaterAtChange==1 & dp.isValid==1)) = nan;
+dp.ChoiceCorrectValid(dp.Premature==1|(dp.freeWaterAtChange==1 & dp.isValid==1)) = nan;
+dp.ChoiceCorrectInvalid(dp.Premature==1) = nan;
+dp.ChoiceMissed(dp.Premature==1|(dp.freeWaterAtChange==1 & dp.isValid==1)) = nan;
+dp.changeLocation(dp.Premature==1) = NaN;
 
