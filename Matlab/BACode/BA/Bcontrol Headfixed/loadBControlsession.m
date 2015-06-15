@@ -82,18 +82,27 @@ for ifile = 1:nfile
     switch temp_dp.Protocol
         case 'VisualSpatialDetection'
             dp(ifile) = loadBC_VSD_helper(temp_dp,saved_history,saved);
+        case 'VisualSpatialDetection_EarlyLick_delays_change'
+            dp(ifile) = loadBC_VSD_helper(temp_dp,saved_history,saved);
             
         case 'Head_fixed2' % don't know if this helper function works right
             
             dp(ifile) = loadBC_goNogoWait_helper(temp_dp,saved_history);
-            
-    end
-        dp(ifile).absolute_trial = dp(ifile).TrialNumber;
+        case 'GoNoGoDetection'
+            dp(ifile) = loadBC_GoNogoDetection_helper(temp_dp,saved_history,saved);
 
-end
+        otherwise
+            error(['unknown protocol ' temp_dp.Protocol])
+    end
     
-    if nfile>1
-        options.concatenateTimes =1 ;
+end
+
+for ifile = 1:nfile
+    dp(ifile).absolute_trial = dp(ifile).TrialNumber;
+end
+
+if nfile>1
+    options.concatenateTimes =1 ;
         dp = concdp(dp,[],options);
     end
     

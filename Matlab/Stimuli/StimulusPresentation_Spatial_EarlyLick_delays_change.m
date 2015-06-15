@@ -163,8 +163,8 @@ hCtr.start();
         rewardSound = audioplayer(sin((1:audio_freq*(data.reward_sound_length))/audio_freq*2*pi*1000)*(data.sound_volume),audio_freq);
         
         noiseSound = audioplayer((rand(s2,audio_freq*(data.error_sound_length),1) - 0.5)*(data.error_sound_volume),audio_freq);
-        early_noise_length = 0.3;
-        earlynoiseSound = audioplayer((rand(s2,audio_freq*(early_noise_length),1) - 0.5)*(data.error_sound_volume),audio_freq);
+        early_noise_length = 0.1;
+        earlynoiseSound = audioplayer((rand(s2,audio_freq*(early_noise_length),1) - 0.5)*(data.error_sound_volume/10),audio_freq);
         
         % % Stimulus
         % % Prepare Dots
@@ -421,7 +421,7 @@ hCtr.start();
         if elapsedTime < 0.1
             bpunish = 0;
             boutCome = 1;
-            disp(['correct detected '   num2str(elapsedTime,'%1.2f')]')
+            disp(['correct detected '   num2str(elapsedTime,'%1.2f')])
         elseif elapsedTime > 0.1 && elapsedTime < 0.175 % detected TTL in more than 100ms that means punishment
             bpunish = 1;
             boutCome = 1;

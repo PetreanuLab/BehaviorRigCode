@@ -85,8 +85,10 @@ while (~bquit)
     try
         if bstopStimulus % reset stimulus
             
-            if bstimChanged  % play reward sound at the end of the stimulus 
-                if ~data.validTrial & data.brewardWitholding
+            if bstimChanged && ~bpunish 
+  % play reward sound at the end of the stimulus 
+                if ~data.validTrial && data.brewardWitholding
+                    WaitSecs(data.rewardWitholdingDelay)
                      if data.trial_sounds
                         disp('play reward tone');
                         play(rewardSound);
@@ -112,7 +114,7 @@ while (~bquit)
             end
             if bvisualCue
                 Screen('FillRect',w, uint8(data.background_level),rect);
-                rad = data.stimulus(1).radius_px;
+                rad = data.cue_radius_px;
                 x0 = data.cue_centre_px(1)-rad;
                 y0 = data.cue_centre_px(2)-rad;
                 Screen('FillOval',w,255,[x0,y0,x0+2*rad,y0+2*rad]);
@@ -153,11 +155,11 @@ while (~bquit)
 %                 size(stimulus(iLoc).dotCentre)
                 
                 % Redraws the position of dead dots
-                i = round(startStimTime-GetSecs()/frameRate);
-                frameRem = rem(i,data.stimulus(iLoc).dot_lifetime);
-                stimulus(iLoc).dotCentrePolar(:, stimulus(iLoc).dotRem==frameRem) = ...
-                    [rand(s1,1,sum( stimulus(iLoc).dotRem==frameRem))*2*pi-pi;...
-                    sqrt(rand(s1,1,sum( stimulus(iLoc).dotRem==frameRem)))*data.stimulus(iLoc).radius_px];
+%                 i = round(startStimTime-GetSecs()/frameRate);
+%                 frameRem = rem(i,data.stimulus(iLoc).dot_lifetime);
+%                 stimulus(iLoc).dotCentrePolar(:, stimulus(iLoc).dotRem==frameRem) = ...
+%                     [rand(s1,1,sum( stimulus(iLoc).dotRem==frameRem))*2*pi-pi;...
+%                     sqrt(rand(s1,1,sum( stimulus(iLoc).dotRem==frameRem)))*data.stimulus(iLoc).radius_px];
                 
                 % Detects whether a border was reached
                 stimulus(iLoc).dotCentrePolar(1, stimulus(iLoc).dotCentrePolar(2,:) > data.stimulus(iLoc).radius_px*1) = stimulus(iLoc).dotCentrePolar(1, stimulus(iLoc).dotCentrePolar(2,:) > data.stimulus(iLoc).radius_px*1)+pi;
@@ -214,7 +216,6 @@ while (~bquit)
                         
                         disp('stimulus stopped no visual error');
                     end
-                    bpunish =0;
                 end
             end
             
@@ -225,16 +226,15 @@ while (~bquit)
         WaitSecs(0.001);
         [touch, secs, keycode] = KbCheck;
         if any(keycode)
-            switch find(keycode,1,'first')
-                case 82% r
-                    PrepareStimulusAndCue();
-                    counter =1;
-                    disp('user reset counter to 0 with r')
-                    if hCtr.isTaskDone
-                        start(hCtr);
-                    end
-                case 81 % q
-                    disp('user quit with q')
+            if keycode(82)&&keycode(17) % ctrl r
+                bstopStimulus = 1;
+                counter = 0;           
+                disp('user reset counter to 0 with r')
+                if hCtr.isTaskDone
+                    start(hCtr);
+                end
+            elseif keycode(88)&&keycode(17)&&keycode(14) % shift ctrl x
+                disp('user quit with x')
                     bquit=1;
             end
         end
@@ -342,7 +342,7 @@ Screen('CloseAll');
         else
             bsoundCue = 0;
         end
-        
+         data.cue_length
         if data.cue_length~= 0
             bvisualCue = 1;
         else
@@ -403,12 +403,12 @@ Screen('CloseAll');
             % Maybe include permutation of dotDirection so that the
             % order of position reset is randomized over the different
             % directions
-            if isfield(stimulus(iLoc),'dotCentre') % only reset when there is a change in the number of dots
-                if size(stimulus(iLoc).dotCentre,2) ~= size(stimulus(iLoc).dotDirection,2) 
-                    stimulus(iLoc).dotRem = rem(1:data.stimulus(iLoc).dot_number,data.stimulus(iLoc).dot_lifetime);
+%             if isfield(stimulus(iLoc),'dotCentre') % only reset when there is a change in the number of dots
+%                 if size(stimulus(iLoc).dotCentre,2) ~= size(stimulus(iLoc).dotDirection,2) 
+%                     stimulus(iLoc).dotRem = rem(1:data.stimulus(iLoc).dot_number,data.stimulus(iLoc).dot_lifetime);
                     stimulus(iLoc).dotCentre = [cos(stimulus(iLoc).dotCentrePolar(1,:)).*stimulus(iLoc).dotCentrePolar(2,:); sin(stimulus(iLoc).dotCentrePolar(1,:)).*stimulus(iLoc).dotCentrePolar(2,:)];
-                end
-            end
+%                 end
+%             end
         end
         
         % Which Stimulus Location is changing
