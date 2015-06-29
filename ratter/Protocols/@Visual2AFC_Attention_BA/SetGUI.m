@@ -22,17 +22,19 @@ switch action,
         SoloParamHandle(obj,'choiceHistory','value',[]);
         SoloParamHandle(obj,'nonRandomSide','value',0);
         SoloParamHandle(obj,'positionHistory','value',[]); 
-        SoloParamHandle(obj,'currTargetPos','value',[]); 
-        SoloParamHandle(obj,'currFoilPos','value',[]); 
-           %% Set all additional GUIs
+        SoloParamHandle(obj,'currTargetPos','value',[]);
+        SoloParamHandle(obj,'currFoilPos','value',[]);
+        SoloParamHandle(obj,'matchHistory','value',[]);
+         
+        %% Set all additional GUIs
         TimingsGUI(obj, 'init');
         MonitorGUI(obj, 'init');
         StimulusGUI(obj,'init');
         TrialGUI(obj,'init');
-        BiasGUI(obj,'init');        
-        SoundGUI(obj,'init');        
-        TreadmillGUI(obj,'init');   
-        
+        BiasGUI(obj,'init');
+        SoundGUI(obj,'init');
+        TreadmillGUI(obj,'init');
+ 
         %% Create protocol main figure
         % Make default figure. We remember to make it non-saveable; on next run
         % the handle to this figure might be different, and we don't want to
@@ -49,7 +51,7 @@ switch action,
                 'MenuBar', 'none',    'NumberTitle', 'off');
         
         % Sets figure size and position
-        set(value(main_fig), 'Position', [424 250 430 620]);
+        set(value(main_fig), 'Position', [ 424   180   430   748]);
         
         % Initial position on main GUI window
         x=10; y=10;        
@@ -114,6 +116,10 @@ switch action,
         DispParam(obj, 'currStimDuration', NaN, x, y); next_row(y);
         DispParam(obj, 'currStimSide', NaN, x, y); next_row(y);
         DispParam(obj, 'currCorrLoop', NaN, x, y); next_row(y);
+       DispParam(obj, 'currBlockCount', 0, x, y); next_row(y);
+       DispParam(obj, 'currBlockLength', NaN, x, y); next_row(y);
+         DispParam(obj, 'currBlockProbPos1Index', NaN, x, y); next_row(y);
+
         SubheaderParam(obj, 'currentHeader', 'Current Trial', x, y); next_row(y,1.5); 
         
         %% Changes column
@@ -154,14 +160,21 @@ switch action,
         
                 %% Last trial section
         DispParam(obj, 'lastTimeOut', NaN, x, y); next_row(y);
+        DispParam(obj, 'lastMatch', NaN, x, y); next_row(y);
         DispParam(obj, 'lastCorrect', NaN, x, y); next_row(y);        
         DispParam(obj, 'lastChoice', NaN, x, y); next_row(y);
         DispParam(obj, 'lastStimSide', NaN, x, y); next_row(y);
         DispParam(obj, 'lastCoher', NaN, x, y); next_row(y);
         DispParam(obj, 'lastTrial', NaN, x, y); next_row(y);
-        SubheaderParam(obj, 'lastHeader', 'Last Trial', x, y); next_row(y,1.5); 
-
+        SubheaderParam(obj, 'lastHeader', 'Last Trial', x, y); next_row(y,1.5);
         
+         
+        DispParam(obj, 'currFoilCoh', NaN, x, y); next_row(y);
+        DispParam(obj, 'currFoilDirn', NaN, x, y); next_row(y);
+        DispParam(obj, 'currFoilSide', NaN, x, y); next_row(y);
+        DispParam(obj, 'currFoilMatch', NaN, x, y); next_row(y);
+        SubheaderParam(obj, 'lastHeader', 'Foil', x, y); next_row(y,1.5);
+
         %% Photo Stimulation Section
         ToggleParam(obj, 'photoStim', 0, x, y, 'OnString', 'Photo Stimulation On', ...
             'OffString', 'Photo Stimulation Off'); next_row(y);
@@ -180,7 +193,8 @@ switch action,
             'biasToggle','soundToggle','treadmillToggle',...
             'timeOutHistory','coherHistory',...
             'positionHistory','correctHistory','stimSideHistory','choiceHistory','currTargetPos','currFoilPos','nonRandomSide',...
-            'corrLoopV','photoStim'});
+            'corrLoopV','photoStim', 'currBlockCount', 'currBlockLength', 'currBlockProbPos1Index',...
+            'currFoilSide','currFoilCoh','currFoilMatch','currFoilDirn','matchHistory','lastMatch'});
 
         % RESET POSITION F DISPATCHER
         a = findobj('type','figure');

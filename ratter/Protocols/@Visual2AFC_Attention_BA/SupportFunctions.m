@@ -12,7 +12,7 @@ switch action,
         if n_done_trials > 0
             stimSideHistory(n_done_trials) = value(currStimSide);
             coherHistory(n_done_trials) = value(currCoher);
-            
+            matchHistory(n_done_trials) = value(currFoilMatch);
             positionHistory(n_done_trials) = value(currStimPos);
             if isempty(parsed_events.states.wrong_choice)==0
                 
@@ -119,8 +119,13 @@ switch action,
             currSoundSidesVolume.value=0;
         end
         
-        %         intStimLum.value=value(tLum)*value(currDensity)+value(bckgLum)*(1-value(currDensity));
-        
+        %         intstimlum.value=value(tlum)*value(currdensity)+value(bckglum)*(1-value(currdensity));
+        if rand(1) <= value(probFoilMatchTarget)
+            currFoilMatch.value = 1;
+        else
+            
+            currFoilMatch.value = 0;
+        end
     case 'set_next_side'
         
         % BA cat
@@ -141,39 +146,92 @@ switch action,
                 nonRandomSide.value = 1;
             end
         end
-       
+        
+        % % blocks of high probablity Pos1 or Pos2
+        
+
+        blkLength = value(blockLength);
+        blkProbPos1 = value( blockProbPos1);
+        blkProbPos1Length =  length(blkProbPos1);
+        if isnan(value(currBlockProbPos1Index))
+            currBlockProbPos1Index.value = randi(length(blkProbPos1));
+        end
+
+        switch value(blockType)
+            case 'noBlock'
+                currBlockCount.value = 0;
+            otherwise
+                %                 Initialize Block
+                if value(currBlockCount)==0
+                    switch value(blockType)
+                        case 'fixedBlock'
+                            currBlockLength.value = blkLength(1);
+                        case 'randomBlock'
+                            if diff(blkLength)==0
+                                currBlockLength.value= blkLength(1);
+                            else
+                                currBlockLength.value =randi(diff(blkLength))+ blkLength(1)-1;
+                            end
+                    end
+                end
+                
+                currBlockCount.value = value(currBlockCount)+1;
+                
+                if value(currBlockCount)== currBlockLength
+                    currBlockCount.value = 0;
+                    currBlockProbPos1Index.value = mod(value(currBlockProbPos1Index),blkProbPos1Length)+1; % start a block with the next Pos1 PRob
+                end
+                
+                % pick Position based on Block probability
+                if rand(1)<= blkProbPos1(min(value(currBlockProbPos1Index),length(blkProbPos1)));
+                    currStimPos.value = 1;
+                    currTargetPos.value = value(stimPos);
+                    currFoilPos.value = value(stim2Pos);
+                else
+                    currStimPos.value = 2;
+                    currTargetPos.value = value(stim2Pos);
+                    currFoilPos.value = value(stimPos);
+                end
+                
+% %                 NOTE:  if correction loops are on they will override this
+% %                 choice, but nonRandomSide will NOT
+%                 if rand < value(leftProb) % always use the leftProb to pick stimulus LEFT/RIGHT
+%                     currStimSide.value = 1;
+%                 else
+%                     currStimSide.value = 0;
+%                 end
+                 
+        end
         
         switch value(sideSelection)
             
             case 'random'
-                
-                if value(nonRandomSide)==0
-                    if rand < value(leftProb)
-                        currStimSide.value = 1;
-                    else
-                        currStimSide.value = 0;
-                    end
-                end
-                
-            case 'biasCorrection'
-                
-                if value(nonRandomSide)==0
-                    
-                    if n_done_trials >= value(biasSize)
-                        biasChoice = nanmean(choiceHistory((end-value(biasSize)+1):end));
-                        biasStimSide = mean(stimSideHistory((end-value(biasSize)+1):end));
-                        bias = (biasChoice-biasStimSide+1)/2;
-                        if isnan(bias)
-                            currStimSide.value = round(biasStimSide);
-                        elseif bias < rand
+                    if value(nonRandomSide)==0
+                        if rand < value(leftProb)
                             currStimSide.value = 1;
                         else
                             currStimSide.value = 0;
                         end
-                    else
-                        currStimSide.value = round(rand);
                     end
-                end
+            case 'biasCorrection'
+                    if value(nonRandomSide)==0
+                        
+                        if n_done_trials >= value(biasSize)
+                            biasChoice = nanmean(choiceHistory((end-value(biasSize)+1):end));
+                            biasStimSide = mean(stimSideHistory((end-value(biasSize)+1):end));
+                            bias = (biasChoice-biasStimSide+1)/2;
+                            if isnan(bias)
+                                currStimSide.value = round(biasStimSide);
+                            elseif bias < rand
+                                currStimSide.value = 1;
+                            else
+                                currStimSide.value = 0;
+                            end
+                        else
+                            currStimSide.value = round(rand);
+                        end
+                    end
+                
             case 'correctionLoop'
                 temp =  value(corrLoopV);
                 if correctionLoopThres <0
@@ -183,21 +241,36 @@ switch action,
                 if temp(1) >= correctionLoopThres
                     currStimSide.value = 1;
                     currStimPos.value = 1;
+                    currTargetPos.value = value(stimPos);
+                    currFoilPos.value = value(stim2Pos);
+
                 elseif temp(2) >= correctionLoopThres
                     currStimSide.value = 1;
                     currStimPos.value = 2;
+                    currTargetPos.value = value(stim2Pos);
+                    currFoilPos.value = value(stimPos);
+
                 elseif temp(3) >= correctionLoopThres
                     currStimSide.value = 0;
                     currStimPos.value = 1;
+                    currTargetPos.value = value(stimPos);
+                    currFoilPos.value = value(stim2Pos);
+
                 elseif temp(4) >= correctionLoopThres
                     currStimSide.value = 0;
                     currStimPos.value = 2;
+                    currTargetPos.value = value(stim2Pos);
+                    currFoilPos.value = value(stimPos);
+
                 else
+                     
                     currCorrLoop.value = 0;
-                    if rand < value(leftProb)
-                        currStimSide.value = 1;
-                    else
-                        currStimSide.value = 0;
+                    if value(nonRandomSide)==0
+                        if rand < value(leftProb)
+                            currStimSide.value = 1;
+                        else
+                            currStimSide.value = 0;
+                        end
                     end
                     
                 end
@@ -214,6 +287,7 @@ switch action,
             lastStimSide.value = stimSideHistory(n_done_trials);
             lastCoher.value = coherHistory(n_done_trials);
             lastTrial.value = n_done_trials;
+            lastMatch.value = matchHistory(n_done_trials);
         end
         
         if n_done_trials > value(meanSize)
@@ -289,17 +363,26 @@ switch action,
         if isequal(value(stimuliMode),'two')      % in this mode the foil is just present but doesn't indicate a  direction
             Loc(2).dot_coherence = 0;
         end
-        if value(probFoilMatchTarget)<=rand(1)
+        if value(currFoilMatch);
             Loc(2).stim_dir  =  Loc(1).stim_dir ;
+            currFoilSide.value = value(currStimSide);            
         else
+            
             Loc(2).dot_speed_cm = tan(value(foilDotSpeed)*pi/180)*value(distCm);
             Loc(2).dot_speed_px = diag_px/diag_cm* Loc(2).dot_speed_cm;
             if value(currStimSide)
                 Loc(2).stim_dir  =  value(rightDirection);
+                currFoilSide.value = 0 ;
             else
                 Loc(2).stim_dir  = value(leftDirection);
+                currFoilSide.value = 1 ;
             end
         end
+        
+
+        
+        currFoilCoh.value = Loc(2).dot_coherence ;
+        currFoilDirn.value = Loc(2).stim_dir ;
         
         background_level = value(bckgLum);
         inter_stim_level = value(intStimLum);

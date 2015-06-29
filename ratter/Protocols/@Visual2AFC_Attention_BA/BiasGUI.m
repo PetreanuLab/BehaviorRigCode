@@ -17,7 +17,7 @@ switch action
         SoloParamHandle(obj, 'bias_fig', 'saveable', 0); bias_fig.value = figure;
                 name = 'Bias Settings';
         set(value(bias_fig), 'Name', name, 'Tag', name, ...
-            'Position', [  866   783   215   230], 'Visible', 'off',...
+            'Position', [866   683   215   330], 'Visible', 'off',...
                     'MenuBar', 'none',    'NumberTitle', 'off',...    
             'closerequestfcn', ['BiasGUI(' class(obj) ',''hide'')']);
         
@@ -30,8 +30,13 @@ switch action
         ToggleParam(obj, 'limitAlternSides', 1, x, y, 'position', [(x+100) y 100 20]); next_row(y);
         SliderParam(obj, 'leftProb', 0.5, 0, 1, x, y); next_row(y);
         NumeditParam(obj, 'correctionLoopThres', 3, x, y, 'TooltipString', '');next_row(y);       
-        NumeditParam(obj, 'biasSize', 20, x, y, 'TooltipString', '');next_row(y);       
+        NumeditParam(obj, 'biasSize', 20, x, y, 'TooltipString', '');next_row(y);
         MenuParam(obj, 'sideSelection',{'random','biasCorrection','correctionLoop'}, 'random', x, y, 'TooltipString', 'Maximum number of consecutive alternations allowed.');next_row(y);
+        SubheaderParam(obj, 'blockhead', 'Blocks Settings', x, y); next_row(y,1.5);
+        MenuParam(obj, 'blockType', {'noBlock','fixedBlock','randomBlock'}, 'noBlock', x, y, 'position', [x y 100 20]);
+        NumeditParam(obj, 'blockLength', [30 50], x, y, 'TooltipString', '','position', [(x+100) y 100 20]);next_row(y);
+       NumeditParam(obj, 'blockProbPos1', [0.1 0.9], x, y, 'TooltipString', '');next_row(y);
+        
         SubheaderParam(obj, 'biasSideHeader', 'Side Bias Settings', x, y); next_row(y,1.5);
         NumeditParam(obj, 'leftRewardMult', 1, x, y, 'TooltipString', '');next_row(y);       
         NumeditParam(obj, 'rightRewardMult', 1, x, y, 'TooltipString', '');next_row(y);               
@@ -39,7 +44,8 @@ switch action
 
         DeclareGlobals(obj, 'rw_args', {'maxAlternSides', 'maxEqualSides',...
             'limitEqualSides','limitAlternSides','leftProb','biasSize'...
-            'sideSelection','leftRewardMult','rightRewardMult','correctionLoopThres'});
+            'sideSelection','leftRewardMult','rightRewardMult','correctionLoopThres',...
+            'blockType','blockLength','blockProbPos1'});
         
         
         
