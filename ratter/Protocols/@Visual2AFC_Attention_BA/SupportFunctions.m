@@ -47,6 +47,20 @@ switch action,
                         temp(4) = temp(4)+1;
                     end
                 end
+            elseif  1 && ~value(punishError) &&  timeOutHistory(n_done_trials)==1 % % if not punishing error count misses as errors
+                if value(currStimSide)
+                    if value(currStimPos)==1
+                        temp(1) = temp(1)+1;
+                    else
+                        temp(2) = temp(2)+1;
+                    end
+                else % right side
+                    if value(currStimPos)==1
+                        temp(3) = temp(3)+1;
+                    else
+                        temp(4) = temp(4)+1;
+                    end
+                end
             elseif isempty(parsed_events.states.correct_choice)==0|| isempty(parsed_events.states.early_correct_choice)==0
                 if value(currStimSide)
                     if value(currStimPos)==1
@@ -149,14 +163,14 @@ switch action,
         
         % % blocks of high probablity Pos1 or Pos2
         
-
+        
         blkLength = value(blockLength);
         blkProbPos1 = value( blockProbPos1);
         blkProbPos1Length =  length(blkProbPos1);
         if isnan(value(currBlockProbPos1Index))
             currBlockProbPos1Index.value = randi(length(blkProbPos1));
         end
-
+        
         switch value(blockType)
             case 'noBlock'
                 currBlockCount.value = 0;
@@ -193,44 +207,44 @@ switch action,
                     currFoilPos.value = value(stimPos);
                 end
                 
-% %                 NOTE:  if correction loops are on they will override this
-% %                 choice, but nonRandomSide will NOT
-%                 if rand < value(leftProb) % always use the leftProb to pick stimulus LEFT/RIGHT
-%                     currStimSide.value = 1;
-%                 else
-%                     currStimSide.value = 0;
-%                 end
-                 
+                % %                 NOTE:  if correction loops are on they will override this
+                % %                 choice, but nonRandomSide will NOT
+                %                 if rand < value(leftProb) % always use the leftProb to pick stimulus LEFT/RIGHT
+                %                     currStimSide.value = 1;
+                %                 else
+                %                     currStimSide.value = 0;
+                %                 end
+                
         end
         
         switch value(sideSelection)
             
             case 'random'
-                    if value(nonRandomSide)==0
-                        if rand < value(leftProb)
+                if value(nonRandomSide)==0
+                    if rand < value(leftProb)
+                        currStimSide.value = 1;
+                    else
+                        currStimSide.value = 0;
+                    end
+                end
+            case 'biasCorrection'
+                if value(nonRandomSide)==0
+                    
+                    if n_done_trials >= value(biasSize)
+                        biasChoice = nanmean(choiceHistory((end-value(biasSize)+1):end));
+                        biasStimSide = mean(stimSideHistory((end-value(biasSize)+1):end));
+                        bias = (biasChoice-biasStimSide+1)/2;
+                        if isnan(bias)
+                            currStimSide.value = round(biasStimSide);
+                        elseif bias < rand
                             currStimSide.value = 1;
                         else
                             currStimSide.value = 0;
                         end
+                    else
+                        currStimSide.value = round(rand);
                     end
-            case 'biasCorrection'
-                    if value(nonRandomSide)==0
-                        
-                        if n_done_trials >= value(biasSize)
-                            biasChoice = nanmean(choiceHistory((end-value(biasSize)+1):end));
-                            biasStimSide = mean(stimSideHistory((end-value(biasSize)+1):end));
-                            bias = (biasChoice-biasStimSide+1)/2;
-                            if isnan(bias)
-                                currStimSide.value = round(biasStimSide);
-                            elseif bias < rand
-                                currStimSide.value = 1;
-                            else
-                                currStimSide.value = 0;
-                            end
-                        else
-                            currStimSide.value = round(rand);
-                        end
-                    end
+                end
                 
             case 'correctionLoop'
                 temp =  value(corrLoopV);
@@ -238,80 +252,102 @@ switch action,
                     corrLoopV.value = [0 0 0 0];
                 end
                 currCorrLoop.value = 1;
-                if temp(1) >= correctionLoopThres
-                    currStimSide.value = 1;
-                    currStimPos.value = 1;
-                    currTargetPos.value = value(stimPos);
-                    currFoilPos.value = value(stim2Pos);
-
-                elseif temp(2) >= correctionLoopThres
-                    currStimSide.value = 1;
-                    currStimPos.value = 2;
-                    currTargetPos.value = value(stim2Pos);
-                    currFoilPos.value = value(stimPos);
-
-                elseif temp(3) >= correctionLoopThres
-                    currStimSide.value = 0;
-                    currStimPos.value = 1;
-                    currTargetPos.value = value(stimPos);
-                    currFoilPos.value = value(stim2Pos);
-
-                elseif temp(4) >= correctionLoopThres
-                    currStimSide.value = 0;
-                    currStimPos.value = 2;
-                    currTargetPos.value = value(stim2Pos);
-                    currFoilPos.value = value(stimPos);
-
-                else
-                     
-                    currCorrLoop.value = 0;
-                    if value(nonRandomSide)==0
-                        if rand < value(leftProb)
-                            currStimSide.value = 1;
-                        else
-                            currStimSide.value = 0;
+                if 1 % DO NOT use Position in correction loop
+                    if temp(3) >= correctionLoopThres || temp(4)  >= correctionLoopThres
+                        currStimSide.value = 0;
+                        
+                    elseif temp(1) >= correctionLoopThres || temp(2)  >= correctionLoopThres
+                        currStimSide.value = 1;
+                         
+                    else
+                        
+                        currCorrLoop.value = 0;
+                        if value(nonRandomSide)==0
+                            if rand < value(leftProb)
+                                currStimSide.value = 1;
+                            else
+                                currStimSide.value = 0;
+                            end
                         end
+                        
                     end
-                    
+                else
+                    if temp(1) >= correctionLoopThres
+                        currStimSide.value = 1;
+                        currStimPos.value = 1;
+                        currTargetPos.value = value(stimPos);
+                        currFoilPos.value = value(stim2Pos);
+                        
+                    elseif temp(2) >= correctionLoopThres
+                        currStimSide.value = 1;
+                        currStimPos.value = 2;
+                        currTargetPos.value = value(stim2Pos);
+                        currFoilPos.value = value(stimPos);
+                        
+                    elseif temp(3) >= correctionLoopThres
+                        currStimSide.value = 0;
+                        currStimPos.value = 1;
+                        currTargetPos.value = value(stimPos);
+                        currFoilPos.value = value(stim2Pos);
+                        
+                    elseif temp(4) >= correctionLoopThres
+                        currStimSide.value = 0;
+                        currStimPos.value = 2;
+                        currTargetPos.value = value(stim2Pos);
+                        currFoilPos.value = value(stimPos);
+                        
+                    else
+                        
+                        currCorrLoop.value = 0;
+                        if value(nonRandomSide)==0
+                            if rand < value(leftProb)
+                                currStimSide.value = 1;
+                            else
+                                currStimSide.value = 0;
+                            end
+                        end
+                        
+                    end
                 end
         end
+
+
+
+
+case 'update_disp_param'
+    
+    if n_done_trials > 0
+        lastTimeOut.value = timeOutHistory(n_done_trials);
+        lastCorrect.value = correctHistory(n_done_trials);
+        lastChoice.value = choiceHistory(n_done_trials);
+        lastStimSide.value = stimSideHistory(n_done_trials);
+        lastCoher.value = coherHistory(n_done_trials);
+        lastTrial.value = n_done_trials;
+        lastMatch.value = matchHistory(n_done_trials);
+    end
+    
+    if n_done_trials > value(meanSize)
+        meanAccu.value = sum(correctHistory((end-value(meanSize)+1):end))/(value(meanSize)-sum(timeOutHistory((end-value(meanSize)+1):end)));
+        
+        ssH = value(stimSideHistory);  ssH = ssH(end-value(meanSize)+1:end);
+        tH = value(timeOutHistory);  tH = tH(end-value(meanSize)+1:end);
+        cH = value(correctHistory);  cH = cH(end-value(meanSize)+1:end);
+        pH = value(positionHistory); pH = pH(end-value(meanSize)+1:end);
+        nP1 = sum(pH==1)-sum(tH(pH==1));            nP2 = sum(pH==2)-sum(tH(pH==2));
+        meanAcPos1.value = sum(cH(pH==1))/nP1;
+        meanAcPos2.value = sum(cH(pH==2))/nP2;
+        meanAccu.value = sum(correctHistory((end-value(meanSize)+1):end))/(value(meanSize)-sum(timeOutHistory((end-value(meanSize)+1):end)));
+        meanTimeOut.value = mean(timeOutHistory((end-value(meanSize)+1):end));
+        meanChoice.value = nanmean(choiceHistory((end-value(meanSize)+1):end));
+        meanStimSide.value = mean(stimSideHistory((end-value(meanSize)+1):end));
+        
+        meanBias.value = (value(meanChoice)-value(meanStimSide)+1)/2;
+        meanBPos1.value = (nanmean(cH(pH==1))-mean(ssH(pH==1))+1)/2; % BA I am not sure that this correctly deals with missed trials
+        meanBPos2.value = (nanmean(cH(pH==2))-mean(ssH(pH==2))+1)/2;
         
         
-        
-    case 'update_disp_param'
-        
-        if n_done_trials > 0
-            lastTimeOut.value = timeOutHistory(n_done_trials);
-            lastCorrect.value = correctHistory(n_done_trials);
-            lastChoice.value = choiceHistory(n_done_trials);
-            lastStimSide.value = stimSideHistory(n_done_trials);
-            lastCoher.value = coherHistory(n_done_trials);
-            lastTrial.value = n_done_trials;
-            lastMatch.value = matchHistory(n_done_trials);
-        end
-        
-        if n_done_trials > value(meanSize)
-            meanAccu.value = sum(correctHistory((end-value(meanSize)+1):end))/(value(meanSize)-sum(timeOutHistory((end-value(meanSize)+1):end)));
-            
-            ssH = value(stimSideHistory);  ssH = ssH(end-value(meanSize)+1:end);
-            tH = value(timeOutHistory);  tH = tH(end-value(meanSize)+1:end);
-            cH = value(correctHistory);  cH = cH(end-value(meanSize)+1:end);
-            pH = value(positionHistory); pH = pH(end-value(meanSize)+1:end);
-            nP1 = sum(pH==1)-sum(tH(pH==1));            nP2 = sum(pH==2)-sum(tH(pH==2));
-            meanAcPos1.value = sum(cH(pH==1))/nP1;
-            meanAcPos2.value = sum(cH(pH==2))/nP2;
-            meanAccu.value = sum(correctHistory((end-value(meanSize)+1):end))/(value(meanSize)-sum(timeOutHistory((end-value(meanSize)+1):end)));
-            meanTimeOut.value = mean(timeOutHistory((end-value(meanSize)+1):end));
-            meanChoice.value = nanmean(choiceHistory((end-value(meanSize)+1):end));
-            meanStimSide.value = mean(stimSideHistory((end-value(meanSize)+1):end));
-            
-            meanBias.value = (value(meanChoice)-value(meanStimSide)+1)/2;
-            meanBPos1.value = (nanmean(cH(pH==1))-mean(ssH(pH==1))+1)/2; % BA I am not sure that this correctly deals with missed trials
-            meanBPos2.value = (nanmean(cH(pH==2))-mean(ssH(pH==2))+1)/2;
-            
-            
-        end
-        
+    end
+    
     case 'param_save'
         %% Screen Dimensions
         diag_cm = value(diagIn)*2.54;
@@ -320,6 +356,7 @@ switch action,
         %% General stimulus properties
         tLum = getprob(targetLum,targetLumProb);
         fLum = getprob(foilLum,foilLumProb);
+        currFoilLum.value = fLum;
         intStimLum.value=value(tLum)*value(currDensity)+value(bckgLum)*(1-value(currDensity));
         
         
@@ -365,7 +402,7 @@ switch action,
         end
         if value(currFoilMatch);
             Loc(2).stim_dir  =  Loc(1).stim_dir ;
-            currFoilSide.value = value(currStimSide);            
+            currFoilSide.value = value(currStimSide);
         else
             
             Loc(2).dot_speed_cm = tan(value(foilDotSpeed)*pi/180)*value(distCm);
@@ -379,7 +416,7 @@ switch action,
             end
         end
         
-
+        
         
         currFoilCoh.value = Loc(2).dot_coherence ;
         currFoilDirn.value = Loc(2).stim_dir ;
@@ -394,7 +431,7 @@ switch action,
         else
             cue_Freq = value(cue2Freq);
         end
-        cue_radiuspx =  Loc(1).radius_px;
+        cue_radiuspx =  round(Loc(1).radius_px*2/3);
         cuePos = Loc(1).centre_px;
         cue_sound_volume =value(cueVolume);
         cue_sound_length      = value(cueSoundLength);
@@ -435,9 +472,9 @@ switch action,
             'left_frequency','right_frequency','rand_seed','preStimulusDelay',...
             'cue_length','cue_Freq','cuePos','cue_radiuspx','cue_sound_volume','cue_sound_length','cue_leftSpeaker','cue_rightSpeaker','Loc');
         
-    otherwise,
-        error(['Don''t know how to deal with action ' action]);
-        
+        otherwise,
+            error(['Don''t know how to deal with action ' action]);
+            
 end;
 end
 function out = getprob(val,Prob)

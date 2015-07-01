@@ -172,6 +172,7 @@ switch action,
         DispParam(obj, 'currFoilCoh', NaN, x, y); next_row(y);
         DispParam(obj, 'currFoilDirn', NaN, x, y); next_row(y);
         DispParam(obj, 'currFoilSide', NaN, x, y); next_row(y);
+        DispParam(obj, 'currFoilLum', NaN, x, y); next_row(y);      
         DispParam(obj, 'currFoilMatch', NaN, x, y); next_row(y);
         SubheaderParam(obj, 'lastHeader', 'Foil', x, y); next_row(y,1.5);
 
@@ -194,7 +195,7 @@ switch action,
             'timeOutHistory','coherHistory',...
             'positionHistory','correctHistory','stimSideHistory','choiceHistory','currTargetPos','currFoilPos','nonRandomSide',...
             'corrLoopV','photoStim', 'currBlockCount', 'currBlockLength', 'currBlockProbPos1Index',...
-            'currFoilSide','currFoilCoh','currFoilMatch','currFoilDirn','matchHistory','lastMatch'});
+            'currFoilSide','currFoilCoh','currFoilMatch','currFoilDirn','currFoilLum','matchHistory','lastMatch'});
 
         % RESET POSITION F DISPATCHER
         a = findobj('type','figure');
