@@ -78,6 +78,12 @@ switch action,
             end
             temp(temp < 0 ) = 0;
             corrLoopV.value = temp;
+            
+            if correctHistory(n_done_trials)
+                fixRatioRwdCnter.value = value(fixRatioRwdCnter)+1;
+            else
+                fixRatioRwdCnter.value = max(value(fixRatioRwdCnter)-1,0);
+            end
         end
     case 'set_next_dots'
         
@@ -108,6 +114,7 @@ switch action,
         coherCumProb = cumsum(value(dotCoherProb));
         coherRand = rand*coherCumProb(end);
         currCoher.value = dotCoher(find(coherRand <= coherCumProb,1));
+        % may be overridden in correction loop
         
         densityCumProb = cumsum(value(dotDensityProb));
         densityRand = rand*densityCumProb(end);
@@ -309,6 +316,23 @@ switch action,
                         
                     end
                 end
+                
+                % if in correction loop use the hardest coh
+                if value(currCorrLoop)
+                    ind = find(value(dotCoherProb)~=0);
+                    currCoher.value = min(dotCoher(ind));                    
+                end
+                
+                % deal with fixed ratio reward
+                if n_done_trials > 0
+                    if value(fixRatioRwdCnter) == value(fixedRationN)
+                        fixRatioRwdCnter.value = 0;
+                        fixRatioRwdthisTrial.value = 1;
+                    else
+                        fixRatioRwdthisTrial.value = 0;
+                    end
+                end
+                
         end
 
 

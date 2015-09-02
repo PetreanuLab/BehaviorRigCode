@@ -2,6 +2,7 @@ function  [] =  StateMatrixSection(obj, action)
 
 global toolboxtrig;
 global leftvalve;
+global syncled;
 global rightvalve;
 global aomtrig;
 global shuttertrig;
@@ -26,6 +27,7 @@ switch action
         %%
         %%%%%%%%%%%%%%%%%% Preparation step %%%%%%%%%%%%%%%%%%%%%%%%%
         %% Gets the correct and wrong choice
+        
         if value(currStimSide)
             correctChoice = 'Lin';
             wrongChoice = 'Rin';
@@ -38,6 +40,10 @@ switch action
             valveOpen = value(valveTime)*value(rightRewardMult);
         end
         
+        % % fixed ratio don't open the valve
+        if value(fixedRationN)>1 & value(fixRatioRwdthisTrial)==0
+            valveOpen = 0.001
+        end
         %% Sets the inter-trial-interval
         if strcmp(value(ITI),'RANDOM')
             ITIValue = rand* (value(ITIMax)-value(ITIMin)) + value(ITIMin);
@@ -83,7 +89,10 @@ switch action
         sma = add_scheduled_wave(sma,'name','after_timer',...
             'preamble',value(afterLick),...
             'trigger_on_up', 'stimulus_trigger');
-        
+        sma = add_scheduled_wave(sma,'name','sync_trigger',...
+            'preamble',0.001,'sustain',0.20,...
+            'DOut',syncled);
+          
         % Scan Image trigger
 %         sma = add_scheduled_wave(sma,'name','scanimage_trigger_1',...
 %             'preamble',0.001,'sustain',0.020,...
@@ -249,7 +258,7 @@ switch action
         end
         
         sma = add_state(sma, 'name', 'cue','self_timer', max(0.001,value(cueLength)),...
-            'output_actions', {'SchedWaveTrig','stimulus_trigger+trial_timer'},...
+            'output_actions', {'SchedWaveTrig','stimulus_trigger+trial_timer+sync_trigger'},...
             'input_to_statechange', {'Tup', 'post_cue'});
         
         sma = add_state(sma, 'name', 'post_cue','self_timer', max(0.001,value(postcueLength)),...

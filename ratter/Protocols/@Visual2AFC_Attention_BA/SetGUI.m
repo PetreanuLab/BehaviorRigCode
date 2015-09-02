@@ -25,6 +25,8 @@ switch action,
         SoloParamHandle(obj,'currTargetPos','value',[]);
         SoloParamHandle(obj,'currFoilPos','value',[]);
         SoloParamHandle(obj,'matchHistory','value',[]);
+        SoloParamHandle(obj,'fixRatioRwdCnter','value',0);
+        SoloParamHandle(obj,'fixRatioRwdthisTrial','value',1);
          
         %% Set all additional GUIs
         TimingsGUI(obj, 'init');
@@ -195,7 +197,8 @@ switch action,
             'timeOutHistory','coherHistory',...
             'positionHistory','correctHistory','stimSideHistory','choiceHistory','currTargetPos','currFoilPos','nonRandomSide',...
             'corrLoopV','photoStim', 'currBlockCount', 'currBlockLength', 'currBlockProbPos1Index',...
-            'currFoilSide','currFoilCoh','currFoilMatch','currFoilDirn','currFoilLum','matchHistory','lastMatch'});
+            'currFoilSide','currFoilCoh','currFoilMatch','currFoilDirn','currFoilLum','matchHistory','lastMatch',...
+            'fixRatioRwdCnter','fixRatioRwdthisTrial'});
 
         % RESET POSITION F DISPATCHER
         a = findobj('type','figure');
