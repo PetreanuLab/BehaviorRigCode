@@ -333,6 +333,25 @@ switch action,
                     end
                 end
                 
+                 % deal with bonus reward
+                 if n_done_trials>value(bonusN) & value(bonusN)>1
+                     if correctHistory(n_done_trials)
+                         currBonusCnt.value = value(currBonusCnt)+1;
+                     else
+                         currBonusCnt.value = 0;
+                     end
+                    
+                 else
+                 currTrialBonus.value = 0;
+                 end
+                  if value(currBonusCnt)>=value(bonusN)
+                          currBonusCnt.value = 0;
+                          currTrialBonus.value = 1;
+                  else
+                     currTrialBonus.value = 0;
+                  end
+                     
+                
         end
 
 

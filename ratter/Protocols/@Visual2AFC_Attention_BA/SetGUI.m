@@ -169,7 +169,9 @@ switch action,
         DispParam(obj, 'lastCoher', NaN, x, y); next_row(y);
         DispParam(obj, 'lastTrial', NaN, x, y); next_row(y);
         SubheaderParam(obj, 'lastHeader', 'Last Trial', x, y); next_row(y,1.5);
-        
+         DispParam(obj, 'currBonusCnt', NaN, x, y); next_row(y);
+        DispParam(obj, 'currTrialBonus', NaN, x, y); next_row(y,1.5);
+       
          
         DispParam(obj, 'currFoilCoh', NaN, x, y); next_row(y);
         DispParam(obj, 'currFoilDirn', NaN, x, y); next_row(y);
@@ -198,7 +200,7 @@ switch action,
             'positionHistory','correctHistory','stimSideHistory','choiceHistory','currTargetPos','currFoilPos','nonRandomSide',...
             'corrLoopV','photoStim', 'currBlockCount', 'currBlockLength', 'currBlockProbPos1Index',...
             'currFoilSide','currFoilCoh','currFoilMatch','currFoilDirn','currFoilLum','matchHistory','lastMatch',...
-            'fixRatioRwdCnter','fixRatioRwdthisTrial'});
+            'fixRatioRwdCnter','fixRatioRwdthisTrial','currBonusCnt','currTrialBonus'});
 
         % RESET POSITION F DISPATCHER
         a = findobj('type','figure');

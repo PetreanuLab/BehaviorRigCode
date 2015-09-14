@@ -44,6 +44,11 @@ switch action
         if value(fixedRationN)>1 & value(fixRatioRwdthisTrial)==0
             valveOpen = 0.001
         end
+        
+        if value(currTrialBonus)==1
+            valveOpen= valveOpen *value(bonusWaterFac);
+            disp('bonus trial')
+        end
         %% Sets the inter-trial-interval
         if strcmp(value(ITI),'RANDOM')
             ITIValue = rand* (value(ITIMax)-value(ITIMin)) + value(ITIMin);
