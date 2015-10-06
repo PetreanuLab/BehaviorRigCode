@@ -504,7 +504,7 @@ switch action,
         param.visual_error      = value(visualError);
         param.brewardWitholding  = value(rewardWitholding);
         param.rewardWitholdingDelay = value(rwdWithDelay); % delay after stimulus off and before reward tone
-        save(fullfile(r.DIR.ratter, 'next_trial'),'param');
+        save(fullfile(r.DIR.ratterExperPort, 'next_trial'),'param');
         
     otherwise,
         error(['Don''t know how to deal with action ' action]);
