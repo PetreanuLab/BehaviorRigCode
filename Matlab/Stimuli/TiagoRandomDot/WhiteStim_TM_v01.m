@@ -29,7 +29,7 @@ end
 %% Opens Psychtoolbox window
 % Open a double buffered fullscreen window and select a gray background
 % color:
-screenNumber = 2; % Stimulus screen
+screenNumber =  r.visualScreen.ID ; % Stimulus screen
 windowPtrs=Screen('Windows');
 if isempty(windowPtrs)
     [w, rect]  = Screen('OpenWindow', screenNumber, 0,[], 8, 2);

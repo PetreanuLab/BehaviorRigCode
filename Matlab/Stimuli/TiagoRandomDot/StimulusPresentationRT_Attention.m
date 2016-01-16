@@ -6,6 +6,12 @@ function StimulusPresentationRT_Attention(bugMe)
 import Devices.NI.DAQmx.*
 r = visRigDefs;
 %% Initiations and instatiations of persistent variables
+
+bplaysoundfrombothspeakers =1;
+if isfield(r.visualScreen,'playsoundfrombothspeakers')
+    bplaysoundfrombothspeakers = r.visualScreen.playsoundfrombothspeakers; % otherwise play sound from cued side
+end
+
 counter=0;
 audio_freq = 44000;
 wrong = 0;
@@ -37,7 +43,7 @@ end
 %% Opens Psychtoolbox window
 % Open a double buffered fullscreen window and select a gray background
 % color:
-screenNumber = 2; % r.visualScreen; % Stimulus screen
+screenNumber =  r.visualScreen.ID ; % Stimulus screen
 windowPtrs=Screen('Windows');
 if isempty(windowPtrs)
     [w, rect]  = Screen('OpenWindow', screenNumber, 0,[], 8, 2);
@@ -106,7 +112,7 @@ hCtr.start();
     end
 
     function PrepareStimulus()
-        data = load(fullfile(r.DIR.ratter,'next_trial_2afc_attention'));
+        data = load(fullfile(r.DIR.temp,'next_trial_2afc_attention'));
         afterLick = 0;
         
         s1 = RandStream('mlfg6331_64','seed',data.rand_seed);
@@ -116,8 +122,8 @@ hCtr.start();
             bsoundCue = 1;
             y =  [sin((1 : audio_freq*data.cue_sound_length)/audio_freq*2*pi*data.cue_Freq)]*data.cue_sound_volume;
             wavedata = zeros(2,data.cue_sound_length*audio_freq);
-            if data.cue_rightSpeaker, wavedata(2,:) =y; end
-            if data.cue_leftSpeaker, wavedata(1,:) =y; end
+            if data.cue_rightSpeaker, wavedata(1,:) =y; end
+            if data.cue_leftSpeaker, wavedata(2,:) =y; end
             cueSound = audioplayer(wavedata,audio_freq);
         end
         % Dots speed
@@ -173,6 +179,18 @@ hCtr.start();
         end
         if (data.cue_length > 0.001)
             Screen('FillRect',w, uint8(data.background_level),rect);
+            
+            % RING cue
+            rad = data.Loc(1).radius_px*1.1;
+            x0 = data.cuePos(1)-rad;
+            y0 = data.cuePos(2)-rad;
+            Screen('FillOval',w,255,[x0,y0,x0+2*rad,y0+2*rad]);
+            rad = data.Loc(1).radius_px;
+            x0 = data.cuePos(1)-rad;
+            y0 = data.cuePos(2)-rad;
+            Screen('FillOval',w,uint8(data.background_level),[x0,y0,x0+2*rad,y0+2*rad]);
+           
+            % Center dot cue
             rad = data.cue_radiuspx;
             x0 = data.cuePos(1)-rad;
             y0 = data.cuePos(2)-rad;
@@ -201,13 +219,28 @@ hCtr.start();
         end
         
         Screen('FillRect',w, uint8(data.background_level),rect);
-        
+  %%% TEST ME      
         if data.sound_sides
+            wavedata = zeros(2,(data.pre_stimulus+data.stim_length)*audio_freq);
             if data.left
-                player = audioplayer([zeros(1, data.pre_stimulus*audio_freq),sin((1:audio_freq*(data.stim_length))/audio_freq*2*pi*(data.left_frequency)*1000)]*(data.sound_sides_volume)/2000,audio_freq);
+                
+                y =  [zeros(1, data.pre_stimulus*audio_freq),sin((1:audio_freq*(data.stim_length))/audio_freq*2*pi*(data.left_frequency)*1000)]*(data.sound_sides_volume)/2000;
             else
-                player = audioplayer([zeros(1, data.pre_stimulus*audio_freq),sin((1:audio_freq*(data.stim_length))/audio_freq*2*pi*(data.right_frequency)*1000)]*(data.sound_sides_volume)/2000,audio_freq);
+                y =  [zeros(1, data.pre_stimulus*audio_freq),sin((1:audio_freq*(data.stim_length))/audio_freq*2*pi*(data.right_frequency)*1000)]*(data.sound_sides_volume)/2000;
             end
+            if ~bplaysoundfrombothspeakers
+                if data.cue_rightSpeaker, wavedata(1,:) =y; end
+                if data.cue_leftSpeaker, wavedata(2,:) =y; end
+                
+            else
+                wavedata(1,:) =y;
+                wavedata(2,:) =y;
+            end
+            player = audioplayer(wavedata,audio_freq);
+
+            %             y =  [sin((1 : audio_freq*data.cue_sound_length)/audio_freq*2*pi*data.cue_Freq)]*data.cue_sound_volume;
+%             wavedata = zeros(2,data.cue_sound_length*audio_freq);
+% 
             play(player);
         end
         

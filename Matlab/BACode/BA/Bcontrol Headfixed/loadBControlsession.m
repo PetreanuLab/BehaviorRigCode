@@ -1,4 +1,4 @@
-function dp = loadBControlsession(nAnimal,nsession,protocol)
+function [dp solo_filename] = loadBControlsession(nAnimal,nsession,protocol)
 % function ratbase = loadsession(nAnimal,nsession,protocol)
 % function ratbase = loadsession(filename)
 
@@ -27,7 +27,12 @@ rd.Dir.BControlDataBehav = rd.DIR.ratterData;
 % end;
 nfile = 1;
 if nargin ==1 % assume input is a filename with path
-    solo_filename = {nAnimal};
+    if iscell(nAnimal)
+        solo_filename = nAnimal;
+        nfile = length(solo_filename);
+    else
+        solo_filename = {nAnimal};
+    end
 elseif nargin ==0
     [FileName,PathName] = uigetfile(fullfile(rd.Dir.BControlDataBehav,slash,'*.mat'),'MultiSelect','On','Select Behavior file to analyze');
     if iscell(FileName)
@@ -64,7 +69,7 @@ for ifile = 1:nfile
     
     
     temp_dp.Experimenter =saved.SavingSection_experimenter;
-    temp_dp.Date =    datestr(datenum(saved.SavingSection_SaveTime),'YYMMDD');
+    temp_dp.Date =    datestr(datenum(saved.SavingSection_SaveTime),'yymmdd');
     
     %% Initialize trial-based variables
     start_trial=1;
@@ -84,6 +89,11 @@ for ifile = 1:nfile
             dp(ifile) = loadBC_VSD_helper(temp_dp,saved_history,saved);
         case 'VisualSpatialDetection_EarlyLick_delays_change'
             dp(ifile) = loadBC_VSD_helper(temp_dp,saved_history,saved);
+        case 'Visual2AFC_Attention_BA'
+            dp(ifile) = loadBC_2AFC_helper(temp_dp,saved_history,saved);
+            
+        case 'Visual2AFC_AttentionFeedback_BA'
+            dp(ifile) = loadBC_2AFC_helper(temp_dp,saved_history,saved);
             
         case 'Head_fixed2' % don't know if this helper function works right
             

@@ -36,7 +36,7 @@ end
 %% Opens Psychtoolbox window
 % Open a double buffered fullscreen window and select a gray background
 % color:
-screenNumber = 2; % r.visualScreen; % Stimulus screen
+screenNumber = r.visualScreen.ID; % Stimulus screen
 windowPtrs=Screen('Windows');
 if isempty(windowPtrs)
     [w, rect]  = Screen('OpenWindow', screenNumber, 0,[], 8, 2);
@@ -104,7 +104,7 @@ hCtr.start();
     end
 
     function PrepareStimulus()
-        data = load(fullfile(r.DIR.ratter,'next_trial'));
+        data = load(fullfile(r.DIR.ratterExperPort,'next_trial'));
         afterLick = 0;
         
         s1 = RandStream('mlfg6331_64','seed',data.rand_seed);
